@@ -1,0 +1,16 @@
+Debug
+Release
+x64
+x86
+*.sdf
+*.suo
+ipch
+*.opensdf
+*.zip
+testImgs
+TagTools/RectTxt
+*.psess
+ProcessRectTxt/testImgs
+*.vspx
+3rdparty/boost_1_64_0/lib_backup
+ConsoleDemo/logs
