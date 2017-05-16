@@ -36,14 +36,18 @@
 
 namespace SYY { 
 
-	struct Rect { int x, y, w, h; };
+	struct Rect { 
+		int x, y, w, h; 
+	};
 
 namespace MedicalAnalysis {
 
 	typedef unsigned long long MA_HANDLE;
 
 	struct BUAnalysisResult {
-		bool bHasLesions;			// 是否有病灶
+		BUAnalysisResult() : pLessionRects(nullptr), nLessionsCount(0) {}
+
+		Rect rCropRect;				// 有效图片区域
 
 		int nLessionsCount;			// 病灶数量
 		Rect* pLessionRects;		// 病灶区域

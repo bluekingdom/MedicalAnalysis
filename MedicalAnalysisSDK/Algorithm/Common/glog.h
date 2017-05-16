@@ -56,7 +56,7 @@ namespace SYY
 		ss << ":";
 		ss.width(2);
 		ss << ptm->tm_sec;
-		ss << " <FILE: " << filename << "> <FUNC:" << funcname << "> LINE:" << line_no;
+		ss << " <FILE: " << filename << "> <FUNC: " << funcname << "> LINE:" << line_no;
 		ss << " ] ";
 
 		ss << mode;

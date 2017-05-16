@@ -12,11 +12,11 @@ namespace SYY {
 
 	bool GLog::Init()
 	{
-		const std::string exePath = Utils::GetCurExePath();
+		const std::string exePath = FileSystem::GetCurExePath();
 
 		const std::string logPath = exePath + "\\logs";
 
-		if (false == Utils::CreateDir(logPath))
+		if (false == FileSystem::CreateDir(logPath))
 		{
 			return false;
 		}

@@ -24,8 +24,22 @@ void main() {
 
 	BUAnalysisResult result;
 	res = ExecuteBUAnalysis(handle, (char* )img.data, img.cols, img.rows, true, &result);
-	if (res != SYY_SYS_ERROR)
+	if (res != SYY_NO_ERROR)
 		return;
+
+	cv::Rect cropRect( result.rCropRect.x, result.rCropRect.y, result.rCropRect.w, result.rCropRect.h );
+	cv::rectangle(img, cropRect, cv::Scalar(255, 255, 255), 2);
+
+	for (int i = 0; i < result.nLessionsCount; i++)
+	{
+		cv::Rect r(result.pLessionRects[i].x, result.pLessionRects[i].y, 
+			result.pLessionRects[i].w, result.pLessionRects[i].h);
+
+		cv::rectangle(img, r, cv::Scalar(255, 255, 255), 1);
+	}
+
+	cv::imshow("img", img);
+	cv::waitKey();
 
 	ReleaseBUAnalysis(handle);
 	ReleaseSDK();

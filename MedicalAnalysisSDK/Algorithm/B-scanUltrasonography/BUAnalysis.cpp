@@ -1,12 +1,27 @@
 #include "BUAnalysis.h"
 #include "Algorithm/Common/glog.h"
+#include "Algorithm/Common/Utils.h"
 
 namespace SYY {
 	namespace MedicalAnalysis {
 
+		BUAnalysis::BUAnalysis()
+			:m_pDnn(nullptr)
+		{
+
+		}
+
 		ErrorCode BUAnalysis::Analysis(const cv::Mat& srcImg, BUAnalysisResult& result)
 		{
 			GLOG("BUAnalysis::Analysis info: enter!\n");
+
+			if (result.pLessionRects)
+			{
+				delete[] result.pLessionRects;
+				result.pLessionRects = nullptr;
+				result.nLessionsCount = 0;
+			}
+
 			if (srcImg.empty())
 			{
 				GLOG("BUAnalysis::Analysis error: srcImg is empty!\n");
@@ -14,12 +29,54 @@ namespace SYY {
 			}
 
 			cv::Rect validRect;
-			CropValidRegion(srcImg, validRect);
+			if (false == CropValidRegion(srcImg, validRect))
+			{
+				validRect.width = srcImg.cols;
+				validRect.height = srcImg.rows;
+			}
 
-			auto drawing = srcImg.clone();
-			cv::rectangle(drawing, validRect, cv::Scalar(255, 255, 255));
-			cv::imshow("drawing", drawing);
-			cv::waitKey();
+			result.rCropRect = Common::CVRect2Rect(validRect);
+
+			std::vector<DeepLearning::Detect_Result> detections;
+			if (!m_pDnn || (false == m_pDnn->Detect_FRCNN(srcImg(validRect), detections)))
+			{
+				GLOG("Execute frcnn error!\n");
+				return SYY_SYS_ERROR;
+			}
+
+			float threshold = 0.90f;
+
+			std::vector<Rect> rects;
+			for (auto detect : detections)
+			{
+				if (detect.score < threshold)
+					continue;
+
+				Rect r;
+				r.x = detect.bbox[0];
+				r.y = detect.bbox[1];
+				r.w = detect.bbox[2] - detect.bbox[0];
+				r.h = detect.bbox[3] - detect.bbox[1];
+
+				r.x += validRect.x;
+				r.y += validRect.y;
+
+				rects.push_back(r);
+			}
+
+			result.nLessionsCount = rects.size();
+			if (result.nLessionsCount > 0)
+				result.pLessionRects = new Rect[result.nLessionsCount];
+
+			for (int i = 0; i < result.nLessionsCount; i++)
+			{
+				result.pLessionRects[i] = rects[i];
+			}
+
+			//auto drawing = srcImg.clone();
+			//cv::rectangle(drawing, validRect, cv::Scalar(255, 255, 255));
+			//cv::imshow("drawing", drawing);
+			//cv::waitKey();
 
 			GLOG("BUAnalysis::Analysis info: exit!\n");
 			return SYY_NO_ERROR;
@@ -27,12 +84,52 @@ namespace SYY {
 
 		ErrorCode BUAnalysis::Init()
 		{
+			if (!m_pDnn)
+			{
+				m_pDnn = new DeepLearning;
+			}
+
+			const std::string root = FileSystem::GetCurExePath() + "\\config\\bscan_frcnn\\";
+			const std::string prototxt = root + "zf_test.prototxt";
+			const std::string caffemodel = root + "custom_data_zf_faster_rcnn_final_inpaint.caffemodel";
+			const std::string config_file = root + "custom_data_config.json";
+
+			int gpu_idx = -1;
+
+			const auto CheckFile = [](const std::string& file) -> bool {
+				if (false == FileSystem::IsExists(file))
+				{
+					GLOG("file not exist: %s\n", file.c_str());
+					return false;
+				}
+				return true;
+			};
+
+			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel) || false == CheckFile(config_file))
+			{
+				return SYY_SYS_ERROR;
+			}
+
+			m_pDnn->SetBlasThreadNum(4);
+
+			if (!m_pDnn || false == m_pDnn->Init_FRCNN(prototxt, config_file, caffemodel, gpu_idx))
+			{
+				GLOG("FRCNN init error!\n");
+				return SYY_SYS_ERROR;
+			}
+
 
 			return SYY_NO_ERROR;
 		}
 
 		ErrorCode BUAnalysis::Release()
 		{
+			if (m_pDnn)
+			{
+				m_pDnn->Release_FRCNN();
+				delete m_pDnn;
+			}
+			m_pDnn = nullptr;
 
 			return SYY_NO_ERROR;
 		}
@@ -222,6 +319,7 @@ namespace SYY {
 				}
 			}
 		}
+
 
 	}
 }

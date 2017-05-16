@@ -4,7 +4,7 @@
 
 namespace SYY {
 
-namespace Utils
+namespace FileSystem
 {
 
 	std::string GetCurExePath()
@@ -19,5 +19,31 @@ namespace Utils
 		return true;
 	}
 
+	bool IsExists(const std::string& file)
+	{
+		return boost::filesystem::exists(file);
+	}
+
 }
+
+namespace Common {
+	const cv::Rect& Rect2CVRect(const Rect& rect)
+	{
+		return cv::Rect(rect.x, rect.y, rect.w, rect.h);
+	}
+
+	const Rect& CVRect2Rect(const cv::Rect& rect)
+	{
+		Rect r;
+		r.x = rect.x;
+		r.y = rect.y;
+		r.w = rect.width;
+		r.h = rect.height;
+		return r;
+	}
+
+}
+
+
+
 }
