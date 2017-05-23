@@ -27,12 +27,12 @@ namespace FileSystem
 }
 
 namespace Common {
-	const cv::Rect& Rect2CVRect(const Rect& rect)
+	const cv::Rect Rect2CVRect(const Rect& rect)
 	{
 		return cv::Rect(rect.x, rect.y, rect.w, rect.h);
 	}
 
-	const Rect& CVRect2Rect(const cv::Rect& rect)
+	const Rect CVRect2Rect(const cv::Rect& rect)
 	{
 		Rect r;
 		r.x = rect.x;

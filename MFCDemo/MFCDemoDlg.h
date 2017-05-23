@@ -61,7 +61,7 @@ private:
 	cv::Mat m_mCurImg;
 	cv::Size m_resizeImgSize;
 
-	SYY::MedicalAnalysis::MA_HANDLE m_hHandle;
+	SYY::HANDLE m_hHandle;
 	bool m_bIsLButtonDown;
 
 public:

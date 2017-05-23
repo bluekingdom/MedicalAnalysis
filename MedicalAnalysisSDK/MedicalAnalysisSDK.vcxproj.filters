@@ -22,6 +22,9 @@
     <Filter Include="Algorithm\B-scanUltrasonography">
       <UniqueIdentifier>{bfa7be8b-6b11-46b6-97ee-fa78a3d14892}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Algorithm\Inpaint">
+      <UniqueIdentifier>{2893dfb6-c4e8-4dc5-8bb1-464684bce796}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
@@ -45,6 +48,27 @@
     <ClInclude Include="Algorithm\Common\Utils.h">
       <Filter>Algorithm\Common</Filter>
     </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\defineall.h">
+      <Filter>Algorithm\Inpaint</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\inpaint.h">
+      <Filter>Algorithm\Inpaint</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\maskedimage.h">
+      <Filter>Algorithm\Inpaint</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\nearestneighborfield.h">
+      <Filter>Algorithm\Inpaint</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\qualitymesures.h">
+      <Filter>Algorithm\Inpaint</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\structdef.h">
+      <Filter>Algorithm\Inpaint</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\InpaintManager.h">
+      <Filter>Algorithm\Inpaint</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MedicalAnalysisSDK.cpp">
@@ -61,6 +85,24 @@
     </ClCompile>
     <ClCompile Include="Algorithm\Common\Utils.cpp">
       <Filter>Algorithm\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Algorithm\Inpaint\inpaint.cpp">
+      <Filter>Algorithm\Inpaint</Filter>
+    </ClCompile>
+    <ClCompile Include="Algorithm\Inpaint\maskedimage.cpp">
+      <Filter>Algorithm\Inpaint</Filter>
+    </ClCompile>
+    <ClCompile Include="Algorithm\Inpaint\nearestneighborfield.cpp">
+      <Filter>Algorithm\Inpaint</Filter>
+    </ClCompile>
+    <ClCompile Include="Algorithm\Inpaint\qualitymesures.cpp">
+      <Filter>Algorithm\Inpaint</Filter>
+    </ClCompile>
+    <ClCompile Include="Algorithm\Inpaint\InpaintManager.cpp">
+      <Filter>Algorithm\Inpaint</Filter>
+    </ClCompile>
+    <ClCompile Include="Algorithm\Inpaint\defineall.cpp">
+      <Filter>Algorithm\Inpaint</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

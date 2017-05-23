@@ -40,9 +40,17 @@ namespace SYY {
 		int x, y, w, h; 
 	};
 
+	struct Image
+	{
+		char* pData;
+		int nWidth;
+		int nHeight;
+	};
+
+	typedef unsigned long long HANDLE;
+
 namespace MedicalAnalysis {
 
-	typedef unsigned long long MA_HANDLE;
 
 	struct BUAnalysisResult {
 		BUAnalysisResult() : pLessionRects(nullptr), nLessionsCount(0) {}
@@ -53,24 +61,30 @@ namespace MedicalAnalysis {
 		Rect* pLessionRects;		// ≤°‘Ó«¯”Ú
 	};
 
+	enum BUAnalysisMode{
+		None = 0x1,
+		Crop_V1 = 0x2,
+		Crop_V2 = 0x4,
+	};
+
 	MEDICAL_ANALYSIS_SDK_API ErrorCode InitSDK();
 
 	MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseSDK();
 
 	MEDICAL_ANALYSIS_SDK_API ErrorCode InitBUAnalysis(
-		OUT MA_HANDLE& hHandle
+		OUT HANDLE& hHandle,
+		IN unsigned long nMode
 		);
 
 	MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseBUAnalysis(
-		INOUT MA_HANDLE& hHandle
+		INOUT HANDLE& hHandle
 		);
 
 	MEDICAL_ANALYSIS_SDK_API ErrorCode ExecuteBUAnalysis(
-		IN MA_HANDLE hHandle, 
+		IN HANDLE hHandle, 
 		IN char* pImg, 
 		IN int nImgWidth, 
 		IN int nImgHeight,
-		IN bool bIsRunCrop,
 		OUT BUAnalysisResult* pResult
 		);
 

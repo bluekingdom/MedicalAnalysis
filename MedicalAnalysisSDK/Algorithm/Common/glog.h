@@ -3,6 +3,7 @@
 #include <ctime>
 #include <fstream>
 #include <stdio.h>
+#include <sstream>
 
 namespace SYY
 {

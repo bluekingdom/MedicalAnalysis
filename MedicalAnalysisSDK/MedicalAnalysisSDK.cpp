@@ -63,16 +63,16 @@ namespace SYY {
 			return SYY_NO_ERROR;
 		}
 
-		MEDICAL_ANALYSIS_SDK_API ErrorCode InitBUAnalysis(OUT MA_HANDLE& hHandle)
+		MEDICAL_ANALYSIS_SDK_API ErrorCode InitBUAnalysis(OUT HANDLE& hHandle, IN unsigned long nMode)
 		{
 			if (sg_pAlgorithmManager == nullptr)
 			{
 				return SYY_SDK_NO_INIT;
 			}
-			return sg_pAlgorithmManager->InitBUAnalysis(hHandle);
+			return sg_pAlgorithmManager->InitBUAnalysis(hHandle, nMode);
 		}
 
-		MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseBUAnalysis(INOUT MA_HANDLE& hHandle)
+		MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseBUAnalysis(INOUT HANDLE& hHandle)
 		{
 			if (sg_pAlgorithmManager == nullptr)
 			{
@@ -81,15 +81,15 @@ namespace SYY {
 			return sg_pAlgorithmManager->ReleaseBUAnalysis(hHandle);
 		}
 
-		MEDICAL_ANALYSIS_SDK_API ErrorCode ExecuteBUAnalysis(IN MA_HANDLE hHandle, 
-			IN char* pImg, IN int nImgWidth, IN int nImgHeight, IN bool bIsRunCrop,
+		MEDICAL_ANALYSIS_SDK_API ErrorCode ExecuteBUAnalysis(IN HANDLE hHandle, 
+			IN char* pImg, IN int nImgWidth, IN int nImgHeight,
 			OUT BUAnalysisResult* pResult)
 		{
 			if (sg_pAlgorithmManager == nullptr)
 			{
 				return SYY_SDK_NO_INIT;
 			}
-			sg_pAlgorithmManager->ExecuteBUAnalysis(hHandle, pImg, nImgWidth, nImgHeight, bIsRunCrop, pResult);
+			sg_pAlgorithmManager->ExecuteBUAnalysis(hHandle, pImg, nImgWidth, nImgHeight, pResult);
 			return SYY_NO_ERROR;
 		}
 

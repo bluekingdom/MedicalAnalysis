@@ -15,27 +15,32 @@
 #pragma once
 
 #include "ErrorCode.h"
-#include "Algorithm/B-scanUltrasonography/BUAnalysis.h"
+#include "MedicalAnalysisSDK.h"
 
 namespace SYY {
-	namespace MedicalAnalysis {
 
 	class AlgorithmManager {
 	public:
 		ErrorCode Init();
 		ErrorCode Release();
 
-		ErrorCode InitBUAnalysis( MA_HANDLE& hHandle );
+		ErrorCode InitBUAnalysis( HANDLE& hHandle, unsigned long nMode);
 
-		ErrorCode ReleaseBUAnalysis( MA_HANDLE& hHandle );
+		ErrorCode ReleaseBUAnalysis( HANDLE& hHandle );
 
-		ErrorCode ExecuteBUAnalysis(MA_HANDLE hHandle,
-			char* pImg, int nImgWidth, int nImgHeight, bool bIsRunCrop,
-			BUAnalysisResult* pResult);
+		ErrorCode ExecuteBUAnalysis(HANDLE hHandle,
+			char* pImg, int nImgWidth, int nImgHeight,
+			MedicalAnalysis::BUAnalysisResult* pResult);
+
+		ErrorCode InitInpaint(HANDLE& hHandle);
+		ErrorCode ReleaseInpaint(HANDLE hHandle);
+
+		ErrorCode ExecuteInpaint(HANDLE hHandle, 
+			Image srcImg, Image maskImg, 
+			Image inpaintImg);
 
 	private:
 
 	};
 
-	}
 }

@@ -15,15 +15,15 @@ void main() {
 		return;
 	}
 
-	MA_HANDLE handle;
-	res = InitBUAnalysis(handle);
+	HANDLE handle;
+	res = InitBUAnalysis(handle, BUAnalysisMode::Crop_V2);
 	if (res != SYY_NO_ERROR)
 		return;
 
 	cv::Mat img = cv::imread("C:\\blue\\data\\»ÈœŸ∞©Õº∆¨\\4a¿‡\\±ˆ”Ó∂\\1.2.826.0.1.3680043.2.461.8663564.1117253524.jpg");
 
 	BUAnalysisResult result;
-	res = ExecuteBUAnalysis(handle, (char* )img.data, img.cols, img.rows, true, &result);
+	res = ExecuteBUAnalysis(handle, (char* )img.data, img.cols, img.rows, &result);
 	if (res != SYY_NO_ERROR)
 		return;
 

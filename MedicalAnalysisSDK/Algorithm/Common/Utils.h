@@ -14,8 +14,8 @@ namespace SYY {
 	}
 
 	namespace Common {
-		const cv::Rect& Rect2CVRect(const Rect& rect);
-		const Rect& CVRect2Rect(const cv::Rect& rect);
+		const cv::Rect Rect2CVRect(const Rect& rect);
+		const Rect CVRect2Rect(const cv::Rect& rect);
 	}
 
 

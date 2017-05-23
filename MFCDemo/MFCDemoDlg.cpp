@@ -66,7 +66,7 @@ BOOL CMFCDemoDlg::OnInitDialog()
 		MessageBox(msg);
 	}
 	else {
-		if (SYY_NO_ERROR != (code = InitBUAnalysis(m_hHandle))) {
+		if (SYY_NO_ERROR != (code = InitBUAnalysis(m_hHandle, BUAnalysisMode::Crop_V1))) {
 			sprintf_s(msg, "初始化B超分析算法失败! 错误码为%d", code);
 			MessageBox(msg);
 		}
@@ -181,7 +181,7 @@ void CMFCDemoDlg::OnBnClickedButtonAnalysis()
 	ErrorCode code;
 	bool bIsCrop = true;
 	if (SYY_NO_ERROR != (code = 
-		ExecuteBUAnalysis(m_hHandle, (char*)img.data, img.cols, img.rows, bIsCrop, &result)))
+		ExecuteBUAnalysis(m_hHandle, (char*)img.data, img.cols, img.rows, &result)))
 	{
 		char msg[256];
 		sprintf_s(msg, "b超分析算法失败！ 错误码为： %d", code);

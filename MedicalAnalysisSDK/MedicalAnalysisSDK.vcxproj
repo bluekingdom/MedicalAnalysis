@@ -155,6 +155,13 @@
     <ClInclude Include="Algorithm\B-scanUltrasonography\BUAnalysis.h" />
     <ClInclude Include="Algorithm\Common\glog.h" />
     <ClInclude Include="Algorithm\Common\Utils.h" />
+    <ClInclude Include="Algorithm\Inpaint\defineall.h" />
+    <ClInclude Include="Algorithm\Inpaint\inpaint.h" />
+    <ClInclude Include="Algorithm\Inpaint\InpaintManager.h" />
+    <ClInclude Include="Algorithm\Inpaint\maskedimage.h" />
+    <ClInclude Include="Algorithm\Inpaint\nearestneighborfield.h" />
+    <ClInclude Include="Algorithm\Inpaint\qualitymesures.h" />
+    <ClInclude Include="Algorithm\Inpaint\structdef.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="ErrorCode.h" />
     <ClInclude Include="MedicalAnalysisSDK.h" />
@@ -164,6 +171,12 @@
     <ClCompile Include="Algorithm\B-scanUltrasonography\BUAnalysis.cpp" />
     <ClCompile Include="Algorithm\Common\glog.cpp" />
     <ClCompile Include="Algorithm\Common\Utils.cpp" />
+    <ClCompile Include="Algorithm\Inpaint\defineall.cpp" />
+    <ClCompile Include="Algorithm\Inpaint\inpaint.cpp" />
+    <ClCompile Include="Algorithm\Inpaint\InpaintManager.cpp" />
+    <ClCompile Include="Algorithm\Inpaint\maskedimage.cpp" />
+    <ClCompile Include="Algorithm\Inpaint\nearestneighborfield.cpp" />
+    <ClCompile Include="Algorithm\Inpaint\qualitymesures.cpp" />
     <ClCompile Include="MedicalAnalysisSDK.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

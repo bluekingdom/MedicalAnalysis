@@ -6,7 +6,9 @@ namespace SYY {
 	namespace MedicalAnalysis {
 
 		BUAnalysis::BUAnalysis()
-			:m_pDnn(nullptr)
+			:m_pBUDetector(nullptr)
+			, m_pValidRegionDetector(nullptr)
+			, m_nCropVersion(0)
 		{
 
 		}
@@ -38,7 +40,7 @@ namespace SYY {
 			result.rCropRect = Common::CVRect2Rect(validRect);
 
 			std::vector<DeepLearning::Detect_Result> detections;
-			if (!m_pDnn || (false == m_pDnn->Detect_FRCNN(srcImg(validRect), detections)))
+			if (!m_pBUDetector || (false == m_pBUDetector->Detect_FRCNN(srcImg(validRect), detections)))
 			{
 				GLOG("Execute frcnn error!\n");
 				return SYY_SYS_ERROR;
@@ -82,19 +84,13 @@ namespace SYY {
 			return SYY_NO_ERROR;
 		}
 
-		ErrorCode BUAnalysis::Init()
+		ErrorCode BUAnalysis::Init(unsigned long nMode)
 		{
-			if (!m_pDnn)
-			{
-				m_pDnn = new DeepLearning;
-			}
+			if (!m_pBUDetector)
+				m_pBUDetector = new DeepLearning;
 
-			const std::string root = FileSystem::GetCurExePath() + "\\config\\bscan_frcnn\\";
-			const std::string prototxt = root + "zf_test.prototxt";
-			const std::string caffemodel = root + "custom_data_zf_faster_rcnn_final_inpaint.caffemodel";
-			const std::string config_file = root + "custom_data_config.json";
-
-			int gpu_idx = -1;
+			if (!m_pValidRegionDetector)
+				m_pValidRegionDetector = new DeepLearning;
 
 			const auto CheckFile = [](const std::string& file) -> bool {
 				if (false == FileSystem::IsExists(file))
@@ -105,36 +101,75 @@ namespace SYY {
 				return true;
 			};
 
+			const std::string root = FileSystem::GetCurExePath() + "\\config\\bscan_frcnn\\";
+			std::string prototxt = root + "zf_test.prototxt";
+			std::string caffemodel = root + "custom_data_zf_faster_rcnn_final_inpaint.caffemodel";
+			const std::string config_file = root + "custom_data_config.json";
+
+			int gpu_idx = -1;
+
 			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel) || false == CheckFile(config_file))
 			{
 				return SYY_SYS_ERROR;
 			}
 
-			m_pDnn->SetBlasThreadNum(4);
+			m_pBUDetector->SetBlasThreadNum(4);
 
-			if (!m_pDnn || false == m_pDnn->Init_FRCNN(prototxt, config_file, caffemodel, gpu_idx))
+			if (!m_pBUDetector || false == m_pBUDetector->Init_FRCNN(prototxt, config_file, caffemodel, gpu_idx))
 			{
-				GLOG("FRCNN init error!\n");
+				GLOG("m_pBUDetector init error!\n");
 				return SYY_SYS_ERROR;
 			}
 
+			if (nMode & BUAnalysisMode::Crop_V1)
+			{
+				m_nCropVersion = 1;
+			}
+			else if (nMode & BUAnalysisMode::Crop_V2)
+			{
+				m_nCropVersion = 2;
+
+				prototxt = root + "imgBox-test.prototxt";
+				caffemodel = root + "imgBox_zf_faster_rcnn_final.caffemodel";
+
+				if (false == CheckFile(prototxt) || false == CheckFile(caffemodel))
+				{
+					return SYY_SYS_ERROR;
+				}
+
+				m_pValidRegionDetector->SetBlasThreadNum(4);
+
+				if (!m_pValidRegionDetector ||
+					false == m_pValidRegionDetector->Init_FRCNN(prototxt, config_file, caffemodel, gpu_idx))
+				{
+					GLOG("m_pValidRegionDetector init error!\n");
+					return SYY_SYS_ERROR;
+				}
+			}
 
 			return SYY_NO_ERROR;
 		}
 
 		ErrorCode BUAnalysis::Release()
 		{
-			if (m_pDnn)
+			if (m_pBUDetector)
 			{
-				m_pDnn->Release_FRCNN();
-				delete m_pDnn;
+				m_pBUDetector->Release_FRCNN();
+				delete m_pBUDetector;
 			}
-			m_pDnn = nullptr;
+			m_pBUDetector = nullptr;
+
+			if (m_pValidRegionDetector)
+			{
+				m_pValidRegionDetector->Release_FRCNN();
+				delete m_pValidRegionDetector;
+			}
+			m_pValidRegionDetector = nullptr;
 
 			return SYY_NO_ERROR;
 		}
 
-		bool BUAnalysis::CropValidRegion(const cv::Mat& srcImg, cv::Rect& validRegion)
+		bool BUAnalysis::CropValidRegion_V1(const cv::Mat& srcImg, cv::Rect& validRegion)
 		{
 			cv::Mat gray, h, v, res1, res2, res3;
 
@@ -251,7 +286,6 @@ namespace SYY {
 			return true;
 		}
 
-
 		void BUAnalysis::GetContoursBBox(const cv::Mat& srcImg, std::vector<cv::Rect>& bbox)
 		{
 			std::vector<std::vector<cv::Point> > contours;
@@ -320,6 +354,62 @@ namespace SYY {
 			}
 		}
 
+		bool BUAnalysis::CropValidRegion(const cv::Mat& srcImg, cv::Rect& validRegion)
+		{
+			if (m_nCropVersion == 0)
+				return false;
 
+			switch (m_nCropVersion)
+			{
+			case 1:
+				CropValidRegion_V1(srcImg, validRegion);
+				break;
+			case 2:
+				CropValidRegion_V2(srcImg, validRegion);
+				break;
+			}
+
+			return true;
+		}
+
+		bool BUAnalysis::CropValidRegion_V2(const cv::Mat& srcImg, cv::Rect& validRegion)
+		{
+			if (!m_pValidRegionDetector)
+			{
+				GLOG("m_pValidRegionDetector is null!\n");
+				return false;
+			}
+
+			std::vector<DeepLearning::Detect_Result> detections;
+			if (false == m_pValidRegionDetector->Detect_FRCNN(srcImg, detections))
+			{
+				GLOG("Execute frcnn error!\n");
+				return SYY_SYS_ERROR;
+			}
+
+			if (detections.size() == 0)
+			{
+				GLOG("detect valid region fail!\n");
+				return false;
+			}
+			else if (detections.size() >= 2)
+			{
+				std::sort(detections.begin(), detections.end(), [](DeepLearning::Detect_Result& rst1, DeepLearning::Detect_Result& rst2){
+					return rst1.score > rst2.score;
+				});
+			}
+
+			auto bbox = detections[0].bbox;
+			const float r = 0.01;
+			int w = bbox[2] - bbox[0];
+			int h = bbox[3] - bbox[1];
+			int x = std::max(0, std::min(srcImg.cols, int(bbox[0] - w * r)));
+			int y = std::max(0, std::min(srcImg.rows, int(bbox[1] - h * r)));
+			w = std::min(srcImg.cols - x, int(w * (1 + 2 * r)));
+			h = std::min(srcImg.rows - y, int(h * (1 + 2 * r)));
+			validRegion = cv::Rect(x, y, w, h);
+
+			return true;
+		}
 	}
 }
