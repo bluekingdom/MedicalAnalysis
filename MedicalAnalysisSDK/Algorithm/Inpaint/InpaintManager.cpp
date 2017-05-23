@@ -106,12 +106,6 @@ namespace Inpaint {
 
 		free(mask);
 
-		// std::cout << "h: " << height << " w: " << width << std::endl;
-		// cv::imshow("srcImg", srcImg);
-		// cv::imshow("maskImg", maskImg);
-		// cv::imshow("inpaintImg", inpaintImg);
-		// cv::waitKey();
-
 		return SYY_NO_ERROR;
 	}
 

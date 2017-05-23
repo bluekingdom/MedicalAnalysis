@@ -38,6 +38,8 @@ BEGIN_MESSAGE_MAP(CMFCDemoDlg, CDialogEx)
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
 	ON_WM_MOUSEMOVE()
+	ON_BN_CLICKED(IDC_BUTTON_INPAINT, &CMFCDemoDlg::OnBnClickedButtonInpaint)
+	ON_BN_CLICKED(IDC_BUTTON_RESET, &CMFCDemoDlg::OnBnClickedButtonReset)
 END_MESSAGE_MAP()
 
 
@@ -66,8 +68,12 @@ BOOL CMFCDemoDlg::OnInitDialog()
 		MessageBox(msg);
 	}
 	else {
-		if (SYY_NO_ERROR != (code = InitBUAnalysis(m_hHandle, BUAnalysisMode::Crop_V1))) {
+		if (SYY_NO_ERROR != (code = InitBUAnalysis(m_hHandleBUAnalysis, BUAnalysisMode::Crop_V1))) {
 			sprintf_s(msg, "³õÊ¼»¯B³¬·ÖÎöËã·¨Ê§°Ü! ´íÎóÂëÎª%d", code);
+			MessageBox(msg);
+		}
+		if (SYY_NO_ERROR != (code = InitInpaint(m_hHandleInpaint))) {
+			sprintf_s(msg, "³õÊ¼»¯Í¼ÏñÐÞ¸´Ëã·¨Ê§°Ü! ´íÎóÂëÎª%d", code);
 			MessageBox(msg);
 		}
 	}
@@ -181,7 +187,7 @@ void CMFCDemoDlg::OnBnClickedButtonAnalysis()
 	ErrorCode code;
 	bool bIsCrop = true;
 	if (SYY_NO_ERROR != (code = 
-		ExecuteBUAnalysis(m_hHandle, (char*)img.data, img.cols, img.rows, &result)))
+		ExecuteBUAnalysis(m_hHandleBUAnalysis, (char*)img.data, img.cols, img.rows, &result)))
 	{
 		char msg[256];
 		sprintf_s(msg, "b³¬·ÖÎöËã·¨Ê§°Ü£¡ ´íÎóÂëÎª£º %d", code);
@@ -432,7 +438,7 @@ void CMFCDemoDlg::OnLButtonDown(UINT nFlags, CPoint point)
 		pt.x *= rx;
 		pt.y *= ry;
 
-		cv::circle(m_mCurImg, pt, 5, cv::Scalar(0, 0, 0), 5);
+		cv::circle(m_mCurImg, pt, 5, cv::Scalar(255, 255, 255), -1);
 
 		ShowImg(m_mCurImg);
 	}
@@ -467,10 +473,45 @@ void CMFCDemoDlg::OnMouseMove(UINT nFlags, CPoint point)
 		pt.x *= rx;
 		pt.y *= ry;
 
-		cv::circle(m_mCurImg, pt, 5, cv::Scalar(0, 0, 0), 5);
+		cv::circle(m_mCurImg, pt, 5, cv::Scalar(255, 255, 255), -1);
 
 		ShowImg(m_mCurImg);
 	}
 
 	CDialogEx::OnMouseMove(nFlags, point);
+}
+
+
+void CMFCDemoDlg::OnBnClickedButtonInpaint()
+{
+	if (m_mCurImg.empty())
+	{
+		MessageBox("ÇëÏÈÑ¡ÔñÍ¼Æ¬!");
+		return;
+	}
+
+	ErrorCode code;
+	Image inpaint,
+		src((char*)m_mOriImg.data, m_mOriImg.cols, m_mOriImg.rows),
+		mask((char*)m_mCurImg.data, m_mCurImg.cols, m_mCurImg.rows);
+
+	if (SYY_NO_ERROR != (code =
+		ExecuteInpaint(m_hHandleInpaint, src, mask, inpaint)))
+	{
+		char msg[256];
+		sprintf_s(msg, "Í¼ÏñÐÞ¸´Ëã·¨Ê§°Ü£¡ ´íÎóÂëÎª£º %d", code);
+		MessageBox(msg);
+		return;
+	}
+
+	m_mCurImg = cv::Mat(inpaint.nHeight, inpaint.nWidth, CV_8UC3, inpaint.pData).clone();
+	m_mOriImg = m_mCurImg.clone();
+
+	ShowImg(m_mCurImg);
+}
+
+
+void CMFCDemoDlg::OnBnClickedButtonReset()
+{
+	ShowImgFromFileIdx(m_nCurFileIdx);
 }

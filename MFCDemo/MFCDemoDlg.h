@@ -61,11 +61,14 @@ private:
 	cv::Mat m_mCurImg;
 	cv::Size m_resizeImgSize;
 
-	SYY::HANDLE m_hHandle;
+	SYY::HANDLE m_hHandleBUAnalysis;
+	SYY::HANDLE m_hHandleInpaint;
 	bool m_bIsLButtonDown;
 
 public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg void OnBnClickedButtonInpaint();
+	afx_msg void OnBnClickedButtonReset();
 };

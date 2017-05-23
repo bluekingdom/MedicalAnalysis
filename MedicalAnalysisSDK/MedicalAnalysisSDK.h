@@ -42,6 +42,9 @@ namespace SYY {
 
 	struct Image
 	{
+		Image() : pData(nullptr), nWidth(0), nHeight(0) {}
+		Image(char* p, int w, int h) : pData(p), nWidth(w), nHeight(h) {}
+
 		char* pData;
 		int nWidth;
 		int nHeight;
@@ -86,6 +89,19 @@ namespace MedicalAnalysis {
 		IN int nImgWidth, 
 		IN int nImgHeight,
 		OUT BUAnalysisResult* pResult
+		);
+
+	MEDICAL_ANALYSIS_SDK_API ErrorCode InitInpaint(
+		OUT HANDLE& hHandle
+		);
+	MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseInpaint(
+		INOUT HANDLE& hHandle
+		);
+	MEDICAL_ANALYSIS_SDK_API ErrorCode ExecuteInpaint(
+		IN HANDLE hHandle,
+		IN Image srcImg,
+		IN Image maskImg,
+		OUT Image& inpaintImg
 		);
 
 }

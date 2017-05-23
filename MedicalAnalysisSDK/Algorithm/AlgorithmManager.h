@@ -37,7 +37,7 @@ namespace SYY {
 
 		ErrorCode ExecuteInpaint(HANDLE hHandle, 
 			Image srcImg, Image maskImg, 
-			Image inpaintImg);
+			Image& inpaintImg);
 
 	private:
 

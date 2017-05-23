@@ -6,14 +6,8 @@
 using namespace SYY;
 using namespace SYY::MedicalAnalysis;
 
-void main() {
+void test_BUAnalysis() {
 	ErrorCode res;
-	
-	res = InitSDK();
-	if (res != SYY_NO_ERROR)
-	{
-		return;
-	}
 
 	HANDLE handle;
 	res = InitBUAnalysis(handle, BUAnalysisMode::Crop_V2);
@@ -42,5 +36,44 @@ void main() {
 	cv::waitKey();
 
 	ReleaseBUAnalysis(handle);
+}
+
+void test_inpaint() {
+	ErrorCode res;
+	HANDLE handle;
+
+	res = InitInpaint(handle);
+	if (res != SYY_NO_ERROR)
+		return;
+
+	auto srcImg = cv::imread("C:\\blue\\data\\ÈéÏÙ°©Í¼Æ¬\\4aÀà01\\³Â½ðÁ¬\\1.2.826.0.1.3680043.2.461.8630787.3708226823.jpg");
+	auto maskImg = cv::imread("C:\\blue\\code\\MedicalAnalysis\\ConsoleDemo\\1.2.826.0.1.3680043.2.461.8630787.3708226823.jpg");
+	Image inpaint, 
+		src((char*)srcImg.data, srcImg.cols, srcImg.rows), 
+		mask((char*)maskImg.data, maskImg.cols, maskImg.rows);
+
+	res = ExecuteInpaint(handle, src, mask, inpaint);
+	if (res != SYY_NO_ERROR)
+		return;
+
+	ReleaseInpaint(handle);
+
+	auto inpaintImg = cv::Mat(inpaint.nHeight, inpaint.nWidth, CV_8UC3, inpaint.pData);
+	cv::imshow("srcImg", srcImg);
+	cv::imshow("maskImg", maskImg);
+	cv::imshow("inpaintImg", inpaintImg);
+	cv::waitKey();
+}
+
+void main() {
+	ErrorCode res;
+	
+	res = InitSDK();
+	if (res != SYY_NO_ERROR)
+		return;
+
+	//test_BUAnalysis();
+	test_inpaint();
+
 	ReleaseSDK();
 }

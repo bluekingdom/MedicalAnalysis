@@ -22,6 +22,9 @@ namespace SYY {
 
 		static AlgorithmManager* sg_pAlgorithmManager = nullptr;
 
+#define CHECK_ALGO_INIT() \
+	if (sg_pAlgorithmManager == nullptr) return SYY_SDK_NO_INIT;
+
 		MEDICAL_ANALYSIS_SDK_API ErrorCode InitSDK()
 		{
 			if (!GLog::GetInstance())
@@ -89,8 +92,25 @@ namespace SYY {
 			{
 				return SYY_SDK_NO_INIT;
 			}
-			sg_pAlgorithmManager->ExecuteBUAnalysis(hHandle, pImg, nImgWidth, nImgHeight, pResult);
-			return SYY_NO_ERROR;
+			return sg_pAlgorithmManager->ExecuteBUAnalysis(hHandle, pImg, nImgWidth, nImgHeight, pResult);
+		}
+
+		MEDICAL_ANALYSIS_SDK_API ErrorCode InitInpaint(OUT HANDLE& hHandle)
+		{
+			CHECK_ALGO_INIT();
+			return sg_pAlgorithmManager->InitInpaint(hHandle);
+		}
+
+		MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseInpaint(INOUT HANDLE& hHandle)
+		{
+			CHECK_ALGO_INIT();
+			return sg_pAlgorithmManager->ReleaseInpaint(hHandle);
+		}
+
+		MEDICAL_ANALYSIS_SDK_API ErrorCode ExecuteInpaint(IN HANDLE hHandle, IN Image srcImg, IN Image maskImg, OUT Image& inpaintImg)
+		{
+			CHECK_ALGO_INIT();
+			return sg_pAlgorithmManager->ExecuteInpaint(hHandle, srcImg, maskImg, inpaintImg);
 		}
 
 	}
