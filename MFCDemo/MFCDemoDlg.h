@@ -51,6 +51,9 @@ protected:
 	void ShowImgFromFileIdx(int idx);
 	void Redraw();
 	void ScreenPt2ImgPt(CPoint snPt, cv::Point& imgPt);
+	void Inpaint_v1();
+	void Inpaint_v2();
+	void Inpaint_v3();
 
 private:
 	std::vector<std::string> m_vFiles;
@@ -59,6 +62,7 @@ private:
 	int m_nCurFileIdx;
 	cv::Mat m_mOriImg;
 	cv::Mat m_mCurImg;
+	cv::Mat m_mMaskImg;
 	cv::Size m_resizeImgSize;
 
 	SYY::HANDLE m_hHandleBUAnalysis;
@@ -71,4 +75,6 @@ public:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnBnClickedButtonInpaint();
 	afx_msg void OnBnClickedButtonReset();
+	afx_msg void OnBnClickedButtonInpaintV2();
+	afx_msg void OnBnClickedButtonInpaintV3();
 };

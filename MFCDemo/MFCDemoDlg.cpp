@@ -40,6 +40,8 @@ BEGIN_MESSAGE_MAP(CMFCDemoDlg, CDialogEx)
 	ON_WM_MOUSEMOVE()
 	ON_BN_CLICKED(IDC_BUTTON_INPAINT, &CMFCDemoDlg::OnBnClickedButtonInpaint)
 	ON_BN_CLICKED(IDC_BUTTON_RESET, &CMFCDemoDlg::OnBnClickedButtonReset)
+	ON_BN_CLICKED(IDC_BUTTON_INPAINT_V2, &CMFCDemoDlg::OnBnClickedButtonInpaintV2)
+	ON_BN_CLICKED(IDC_BUTTON_INPAINT_V3, &CMFCDemoDlg::OnBnClickedButtonInpaintV3)
 END_MESSAGE_MAP()
 
 
@@ -274,6 +276,7 @@ bool CMFCDemoDlg::ShowImg(const cv::Mat& src)
 	CDC *pDC = pWnd->GetDC();//获得pictrue控件的DC   
 
 	c_mat.Draw(pDC->m_hDC, rect); //将图片画到Picture控件表示的矩形区域   
+	c_mat.Draw(pDC->m_hDC, rect); //将图片画到Picture控件表示的矩形区域   
 
 	ReleaseDC(pDC);
 
@@ -384,6 +387,7 @@ void CMFCDemoDlg::ShowImgFromFileIdx(int idx)
 	}
 
 	m_mOriImg = img;
+	m_mMaskImg = cv::Mat::zeros(img.size(), CV_8UC1);
 
 	ShowImg(m_mBgMat);
 
@@ -439,6 +443,7 @@ void CMFCDemoDlg::OnLButtonDown(UINT nFlags, CPoint point)
 		pt.y *= ry;
 
 		cv::circle(m_mCurImg, pt, 5, cv::Scalar(255, 255, 255), -1);
+		cv::circle(m_mMaskImg, pt, 5, cv::Scalar(255), -1);
 
 		ShowImg(m_mCurImg);
 	}
@@ -474,6 +479,7 @@ void CMFCDemoDlg::OnMouseMove(UINT nFlags, CPoint point)
 		pt.y *= ry;
 
 		cv::circle(m_mCurImg, pt, 5, cv::Scalar(255, 255, 255), -1);
+		cv::circle(m_mMaskImg, pt, 5, cv::Scalar(255), -1);
 
 		ShowImg(m_mCurImg);
 	}
@@ -490,6 +496,18 @@ void CMFCDemoDlg::OnBnClickedButtonInpaint()
 		return;
 	}
 
+	Inpaint_v1();
+
+}
+
+
+void CMFCDemoDlg::OnBnClickedButtonReset()
+{
+	ShowImgFromFileIdx(m_nCurFileIdx);
+}
+
+void CMFCDemoDlg::Inpaint_v1()
+{
 	ErrorCode code;
 	Image inpaint,
 		src((char*)m_mOriImg.data, m_mOriImg.cols, m_mOriImg.rows),
@@ -510,8 +528,57 @@ void CMFCDemoDlg::OnBnClickedButtonInpaint()
 	ShowImg(m_mCurImg);
 }
 
-
-void CMFCDemoDlg::OnBnClickedButtonReset()
+void CMFCDemoDlg::Inpaint_v2()
 {
-	ShowImgFromFileIdx(m_nCurFileIdx);
+	cv::Mat inpaintImg;
+
+/*-   **INPAINT_NS** Navier-Stokes based method [Navier01]
+-   **INPAINT_TELEA** Method by Alexandru Telea @cite Telea04 .*/
+
+	cv::inpaint(m_mCurImg, m_mMaskImg, inpaintImg, 5, cv::INPAINT_NS);
+	m_mCurImg = inpaintImg.clone();
+	m_mOriImg = inpaintImg.clone();
+
+	ShowImg(inpaintImg);
+}
+
+
+void CMFCDemoDlg::OnBnClickedButtonInpaintV2()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	if (m_mCurImg.empty())
+	{
+		MessageBox("请先选择图片!");
+		return;
+	}
+
+	Inpaint_v2();
+}
+
+
+void CMFCDemoDlg::OnBnClickedButtonInpaintV3()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	if (m_mCurImg.empty())
+	{
+		MessageBox("请先选择图片!");
+		return;
+	}
+
+	Inpaint_v3();
+
+}
+
+void CMFCDemoDlg::Inpaint_v3()
+{
+	cv::Mat inpaintImg;
+
+	/*-   **INPAINT_NS** Navier-Stokes based method [Navier01]
+	-   **INPAINT_TELEA** Method by Alexandru Telea @cite Telea04 .*/
+
+	cv::inpaint(m_mCurImg, m_mMaskImg, inpaintImg, 50, cv::INPAINT_TELEA);
+	m_mCurImg = inpaintImg.clone();
+	m_mOriImg = inpaintImg.clone();
+
+	ShowImg(inpaintImg);
 }
