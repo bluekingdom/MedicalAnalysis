@@ -42,18 +42,44 @@ namespace SYY {
 
 	struct Image
 	{
-		Image() : pData(nullptr), nWidth(0), nHeight(0) {}
-		Image(char* p, int w, int h) : pData(p), nWidth(w), nHeight(h) {}
+		Image() : pData(nullptr), nWidth(0), nHeight(0), nChannels(0) {}
+		Image(char* p, int w, int h, int c) : pData(p), nWidth(w), nHeight(h), nChannels(c) {}
 
 		char* pData;
 		int nWidth;
 		int nHeight;
+		int nChannels;
 	};
 
 	typedef unsigned long long HANDLE;
 
-namespace MedicalAnalysis {
+	MEDICAL_ANALYSIS_SDK_API ErrorCode InitSDK();
 
+	MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseSDK();
+
+namespace Inpainting{
+	enum InpaintMode
+	{
+		PatchMatch = 0x1,
+		Criminisi = 0x2,
+	};
+
+	MEDICAL_ANALYSIS_SDK_API ErrorCode InitInpaint(
+		OUT HANDLE& hHandle,
+		IN unsigned long nMode
+		);
+	MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseInpaint(
+		INOUT HANDLE& hHandle
+		);
+	MEDICAL_ANALYSIS_SDK_API ErrorCode ExecuteInpaint(
+		IN HANDLE hHandle,
+		IN Image srcImg,
+		IN Image maskImg,
+		OUT Image& inpaintImg
+		);
+}
+
+namespace MedicalAnalysis {
 
 	struct BUAnalysisResult {
 		BUAnalysisResult() : pLessionRects(nullptr), nLessionsCount(0) {}
@@ -70,9 +96,6 @@ namespace MedicalAnalysis {
 		Crop_V2 = 0x4,
 	};
 
-	MEDICAL_ANALYSIS_SDK_API ErrorCode InitSDK();
-
-	MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseSDK();
 
 	MEDICAL_ANALYSIS_SDK_API ErrorCode InitBUAnalysis(
 		OUT HANDLE& hHandle,
@@ -90,19 +113,5 @@ namespace MedicalAnalysis {
 		IN int nImgHeight,
 		OUT BUAnalysisResult* pResult
 		);
-
-	MEDICAL_ANALYSIS_SDK_API ErrorCode InitInpaint(
-		OUT HANDLE& hHandle
-		);
-	MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseInpaint(
-		INOUT HANDLE& hHandle
-		);
-	MEDICAL_ANALYSIS_SDK_API ErrorCode ExecuteInpaint(
-		IN HANDLE hHandle,
-		IN Image srcImg,
-		IN Image maskImg,
-		OUT Image& inpaintImg
-		);
-
 }
 }

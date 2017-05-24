@@ -104,7 +104,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>MEDICAL_ANALYSIS_SDK_EXPORTS;WIN64;_DEBUG;_WINDOWS;_USRDLL;MEDICALANALYSISSDK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\MedicalAnalysisSDK;$(SolutionDir)\3rdparty\opencv_3_1_0\include;$(SolutionDir)\3rdparty\boost_1_64_0;$(SolutionDir)\3rdparty\deeplearning</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\MedicalAnalysisSDK\Algorithm\Inpaint;$(SolutionDir)\MedicalAnalysisSDK;$(SolutionDir)\3rdparty\opencv_3_1_0\include;$(SolutionDir)\3rdparty\boost_1_64_0;$(SolutionDir)\3rdparty\deeplearning</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -139,7 +139,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>MEDICAL_ANALYSIS_SDK_EXPORTS;WIN64;NDEBUG;_WINDOWS;_USRDLL;MEDICALANALYSISSDK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\MedicalAnalysisSDK;$(SolutionDir)\3rdparty\opencv_3_1_0\include;$(SolutionDir)\3rdparty\boost_1_64_0;$(SolutionDir)\3rdparty\deeplearning</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\MedicalAnalysisSDK\Algorithm\Inpaint;$(SolutionDir)\MedicalAnalysisSDK;$(SolutionDir)\3rdparty\opencv_3_1_0\include;$(SolutionDir)\3rdparty\boost_1_64_0;$(SolutionDir)\3rdparty\deeplearning</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -158,6 +158,16 @@
     <ClInclude Include="Algorithm\Inpaint\defineall.h" />
     <ClInclude Include="Algorithm\Inpaint\inpaint.h" />
     <ClInclude Include="Algorithm\Inpaint\InpaintManager.h" />
+    <ClInclude Include="Algorithm\Inpaint\inpaint\criminisi_inpainter.h" />
+    <ClInclude Include="Algorithm\Inpaint\inpaint\gradient.h" />
+    <ClInclude Include="Algorithm\Inpaint\inpaint\integral.h" />
+    <ClInclude Include="Algorithm\Inpaint\inpaint\mean_shift.h" />
+    <ClInclude Include="Algorithm\Inpaint\inpaint\patch.h" />
+    <ClInclude Include="Algorithm\Inpaint\inpaint\patch_match.h" />
+    <ClInclude Include="Algorithm\Inpaint\inpaint\pyramid.h" />
+    <ClInclude Include="Algorithm\Inpaint\inpaint\stats.h" />
+    <ClInclude Include="Algorithm\Inpaint\inpaint\template_match_candidates.h" />
+    <ClInclude Include="Algorithm\Inpaint\inpaint\timer.h" />
     <ClInclude Include="Algorithm\Inpaint\maskedimage.h" />
     <ClInclude Include="Algorithm\Inpaint\nearestneighborfield.h" />
     <ClInclude Include="Algorithm\Inpaint\qualitymesures.h" />
@@ -174,6 +184,11 @@
     <ClCompile Include="Algorithm\Inpaint\defineall.cpp" />
     <ClCompile Include="Algorithm\Inpaint\inpaint.cpp" />
     <ClCompile Include="Algorithm\Inpaint\InpaintManager.cpp" />
+    <ClCompile Include="Algorithm\Inpaint\inpaint\criminisi_inpainter.cpp" />
+    <ClCompile Include="Algorithm\Inpaint\inpaint\mean_shift.cpp" />
+    <ClCompile Include="Algorithm\Inpaint\inpaint\patch_match.cpp" />
+    <ClCompile Include="Algorithm\Inpaint\inpaint\pyramid.cpp" />
+    <ClCompile Include="Algorithm\Inpaint\inpaint\template_match_candidates.cpp" />
     <ClCompile Include="Algorithm\Inpaint\maskedimage.cpp" />
     <ClCompile Include="Algorithm\Inpaint\nearestneighborfield.cpp" />
     <ClCompile Include="Algorithm\Inpaint\qualitymesures.cpp" />

@@ -32,7 +32,7 @@ namespace SYY {
 			char* pImg, int nImgWidth, int nImgHeight,
 			MedicalAnalysis::BUAnalysisResult* pResult);
 
-		ErrorCode InitInpaint(HANDLE& hHandle);
+		ErrorCode InitInpaint(HANDLE& hHandle, unsigned long nMode);
 		ErrorCode ReleaseInpaint(HANDLE hHandle);
 
 		ErrorCode ExecuteInpaint(HANDLE hHandle, 

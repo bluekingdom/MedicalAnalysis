@@ -18,53 +18,53 @@
 
 
 namespace SYY {
-	namespace MedicalAnalysis {
-
-		static AlgorithmManager* sg_pAlgorithmManager = nullptr;
+	static AlgorithmManager* sg_pAlgorithmManager = nullptr;
 
 #define CHECK_ALGO_INIT() \
 	if (sg_pAlgorithmManager == nullptr) return SYY_SDK_NO_INIT;
 
-		MEDICAL_ANALYSIS_SDK_API ErrorCode InitSDK()
+	MEDICAL_ANALYSIS_SDK_API ErrorCode InitSDK()
+	{
+		if (!GLog::GetInstance())
 		{
-			if (!GLog::GetInstance())
-			{
-				return SYY_LOG_INIT_NO_PERMISSION;
-			}
-
-			GLOG("InitSDK Info: enter InitSDK!\n");
-
-			if (sg_pAlgorithmManager != nullptr)
-			{
-				GLOG("InitSDK Error: repeat call InitSDK!\n");
-				return SYY_SDK_REPEAT_INIT;
-			}
-
-			sg_pAlgorithmManager = new AlgorithmManager;
-
-			ErrorCode code;
-			if (!sg_pAlgorithmManager || SYY_NO_ERROR != (code = sg_pAlgorithmManager->Init()))
-			{
-				GLOG("InitSDK Error: algorithm manager init fail!\n");
-				return code;
-			}
-
-			GLOG("InitSDK Info: InitSDK success!\n");
-			return SYY_NO_ERROR;
+			return SYY_LOG_INIT_NO_PERMISSION;
 		}
 
-		MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseSDK()
+		GLOG("InitSDK Info: enter InitSDK!\n");
+
+		if (sg_pAlgorithmManager != nullptr)
 		{
-			GLOG("ReleaseSDK Info: enter!\n");
-
-			if (sg_pAlgorithmManager)
-			{
-				sg_pAlgorithmManager->Release();
-			}
-
-			GLOG("ReleaseSDK Info: success!\n");
-			return SYY_NO_ERROR;
+			GLOG("InitSDK Error: repeat call InitSDK!\n");
+			return SYY_SDK_REPEAT_INIT;
 		}
+
+		sg_pAlgorithmManager = new AlgorithmManager;
+
+		ErrorCode code;
+		if (!sg_pAlgorithmManager || SYY_NO_ERROR != (code = sg_pAlgorithmManager->Init()))
+		{
+			GLOG("InitSDK Error: algorithm manager init fail!\n");
+			return code;
+		}
+
+		GLOG("InitSDK Info: InitSDK success!\n");
+		return SYY_NO_ERROR;
+	}
+
+	MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseSDK()
+	{
+		GLOG("ReleaseSDK Info: enter!\n");
+
+		if (sg_pAlgorithmManager)
+		{
+			sg_pAlgorithmManager->Release();
+		}
+
+		GLOG("ReleaseSDK Info: success!\n");
+		return SYY_NO_ERROR;
+	}
+
+	namespace MedicalAnalysis {
 
 		MEDICAL_ANALYSIS_SDK_API ErrorCode InitBUAnalysis(OUT HANDLE& hHandle, IN unsigned long nMode)
 		{
@@ -84,7 +84,7 @@ namespace SYY {
 			return sg_pAlgorithmManager->ReleaseBUAnalysis(hHandle);
 		}
 
-		MEDICAL_ANALYSIS_SDK_API ErrorCode ExecuteBUAnalysis(IN HANDLE hHandle, 
+		MEDICAL_ANALYSIS_SDK_API ErrorCode ExecuteBUAnalysis(IN HANDLE hHandle,
 			IN char* pImg, IN int nImgWidth, IN int nImgHeight,
 			OUT BUAnalysisResult* pResult)
 		{
@@ -94,11 +94,14 @@ namespace SYY {
 			}
 			return sg_pAlgorithmManager->ExecuteBUAnalysis(hHandle, pImg, nImgWidth, nImgHeight, pResult);
 		}
+	}
 
-		MEDICAL_ANALYSIS_SDK_API ErrorCode InitInpaint(OUT HANDLE& hHandle)
+	namespace Inpainting {
+
+		MEDICAL_ANALYSIS_SDK_API ErrorCode InitInpaint(OUT HANDLE& hHandle, unsigned long nMode)
 		{
 			CHECK_ALGO_INIT();
-			return sg_pAlgorithmManager->InitInpaint(hHandle);
+			return sg_pAlgorithmManager->InitInpaint(hHandle, nMode);
 		}
 
 		MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseInpaint(INOUT HANDLE& hHandle)

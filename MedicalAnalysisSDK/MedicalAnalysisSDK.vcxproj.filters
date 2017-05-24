@@ -25,6 +25,9 @@
     <Filter Include="Algorithm\Inpaint">
       <UniqueIdentifier>{2893dfb6-c4e8-4dc5-8bb1-464684bce796}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Algorithm\Inpaint\inpaint">
+      <UniqueIdentifier>{0ac4eab8-fe39-4685-a5bf-903d34f8b880}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
@@ -69,6 +72,36 @@
     <ClInclude Include="Algorithm\Inpaint\InpaintManager.h">
       <Filter>Algorithm\Inpaint</Filter>
     </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\inpaint\criminisi_inpainter.h">
+      <Filter>Algorithm\Inpaint\inpaint</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\inpaint\gradient.h">
+      <Filter>Algorithm\Inpaint\inpaint</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\inpaint\integral.h">
+      <Filter>Algorithm\Inpaint\inpaint</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\inpaint\mean_shift.h">
+      <Filter>Algorithm\Inpaint\inpaint</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\inpaint\patch.h">
+      <Filter>Algorithm\Inpaint\inpaint</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\inpaint\patch_match.h">
+      <Filter>Algorithm\Inpaint\inpaint</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\inpaint\pyramid.h">
+      <Filter>Algorithm\Inpaint\inpaint</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\inpaint\stats.h">
+      <Filter>Algorithm\Inpaint\inpaint</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\inpaint\template_match_candidates.h">
+      <Filter>Algorithm\Inpaint\inpaint</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\Inpaint\inpaint\timer.h">
+      <Filter>Algorithm\Inpaint\inpaint</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MedicalAnalysisSDK.cpp">
@@ -103,6 +136,21 @@
     </ClCompile>
     <ClCompile Include="Algorithm\Inpaint\defineall.cpp">
       <Filter>Algorithm\Inpaint</Filter>
+    </ClCompile>
+    <ClCompile Include="Algorithm\Inpaint\inpaint\criminisi_inpainter.cpp">
+      <Filter>Algorithm\Inpaint\inpaint</Filter>
+    </ClCompile>
+    <ClCompile Include="Algorithm\Inpaint\inpaint\mean_shift.cpp">
+      <Filter>Algorithm\Inpaint\inpaint</Filter>
+    </ClCompile>
+    <ClCompile Include="Algorithm\Inpaint\inpaint\patch_match.cpp">
+      <Filter>Algorithm\Inpaint\inpaint</Filter>
+    </ClCompile>
+    <ClCompile Include="Algorithm\Inpaint\inpaint\pyramid.cpp">
+      <Filter>Algorithm\Inpaint\inpaint</Filter>
+    </ClCompile>
+    <ClCompile Include="Algorithm\Inpaint\inpaint\template_match_candidates.cpp">
+      <Filter>Algorithm\Inpaint\inpaint</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

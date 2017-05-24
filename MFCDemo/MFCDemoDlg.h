@@ -54,6 +54,7 @@ protected:
 	void Inpaint_v1();
 	void Inpaint_v2();
 	void Inpaint_v3();
+	void Inpaint_v4();
 
 private:
 	std::vector<std::string> m_vFiles;
@@ -66,7 +67,8 @@ private:
 	cv::Size m_resizeImgSize;
 
 	SYY::HANDLE m_hHandleBUAnalysis;
-	SYY::HANDLE m_hHandleInpaint;
+	SYY::HANDLE m_hHandleInpaintPM;
+	SYY::HANDLE m_hHandleInpaintCriminisi;
 	bool m_bIsLButtonDown;
 
 public:
@@ -77,4 +79,5 @@ public:
 	afx_msg void OnBnClickedButtonReset();
 	afx_msg void OnBnClickedButtonInpaintV2();
 	afx_msg void OnBnClickedButtonInpaintV3();
+	afx_msg void OnBnClickedButtonInpaintV4();
 };

@@ -5,6 +5,7 @@
 
 using namespace SYY;
 using namespace SYY::MedicalAnalysis;
+using namespace SYY::Inpainting;
 
 void test_BUAnalysis() {
 	ErrorCode res;
@@ -42,15 +43,16 @@ void test_inpaint() {
 	ErrorCode res;
 	HANDLE handle;
 
-	res = InitInpaint(handle);
+	res = InitInpaint(handle, InpaintMode::PatchMatch);
 	if (res != SYY_NO_ERROR)
 		return;
 
 	auto srcImg = cv::imread("C:\\blue\\data\\ÈéÏÙ°©Í¼Æ¬\\4aÀà01\\³Â½ðÁ¬\\1.2.826.0.1.3680043.2.461.8630787.3708226823.jpg");
 	auto maskImg = cv::imread("C:\\blue\\code\\MedicalAnalysis\\ConsoleDemo\\1.2.826.0.1.3680043.2.461.8630787.3708226823.jpg");
+	cv::cvtColor(maskImg, maskImg, CV_RGB2GRAY);
 	Image inpaint, 
-		src((char*)srcImg.data, srcImg.cols, srcImg.rows), 
-		mask((char*)maskImg.data, maskImg.cols, maskImg.rows);
+		src((char*)srcImg.data, srcImg.cols, srcImg.rows, srcImg.channels()), 
+		mask((char*)maskImg.data, maskImg.cols, maskImg.rows, maskImg.channels());
 
 	res = ExecuteInpaint(handle, src, mask, inpaint);
 	if (res != SYY_NO_ERROR)

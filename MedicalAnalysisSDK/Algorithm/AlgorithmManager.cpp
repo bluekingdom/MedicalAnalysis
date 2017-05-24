@@ -20,7 +20,7 @@
 
 namespace SYY {
 	using namespace MedicalAnalysis;
-	using namespace Inpaint;
+	using namespace Inpainting;
 
 	ErrorCode AlgorithmManager::Init()
 	{
@@ -89,8 +89,8 @@ namespace SYY {
 			delete[] inpaintImg.pData;
 		inpaintImg.pData = nullptr;
 
-		auto src = cv::Mat(srcImg.nHeight, srcImg.nWidth, CV_8UC3, srcImg.pData);
-		auto mask = cv::Mat(maskImg.nHeight, maskImg.nWidth, CV_8UC3, maskImg.pData);
+		auto src = cv::Mat(srcImg.nHeight, srcImg.nWidth, srcImg.nChannels == 3 ? CV_8UC3 : CV_8UC1, srcImg.pData);
+		auto mask = cv::Mat(maskImg.nHeight, maskImg.nWidth, maskImg.nChannels == 1 ? CV_8UC1 : CV_8UC3, maskImg.pData);
 		cv::Mat inpaint;
 		//= cv::Mat(inpaintImg.nHeight, inpaintImg.nWidth, CV_8UC3, inpaintImg.pData);
 
@@ -101,6 +101,7 @@ namespace SYY {
 
 		inpaintImg.nHeight = inpaint.rows;
 		inpaintImg.nWidth = inpaint.cols;
+		inpaintImg.nChannels = inpaint.channels();
 		int imgDataLen = inpaint.rows * inpaint.step[0];
 
 		inpaintImg.pData = new char[imgDataLen];
@@ -109,10 +110,10 @@ namespace SYY {
 		return SYY_NO_ERROR;
 	}
 
-	SYY::ErrorCode AlgorithmManager::InitInpaint(HANDLE& hHandle)
+	SYY::ErrorCode AlgorithmManager::InitInpaint(HANDLE& hHandle, unsigned long nMode)
 	{
 		InpaintManager* pInpaint = new InpaintManager();
-		if (!pInpaint || SYY_NO_ERROR != pInpaint->Init())
+		if (!pInpaint || SYY_NO_ERROR != pInpaint->Init(nMode))
 		{
 			GLOG("Error: inpaint init fail!\n");
 			return SYY_SYS_ERROR;

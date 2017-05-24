@@ -14,6 +14,7 @@
 
 using namespace SYY;
 using namespace SYY::MedicalAnalysis;
+using namespace SYY::Inpainting;
 
 
 // CMFCDemoDlg 对话框
@@ -42,6 +43,7 @@ BEGIN_MESSAGE_MAP(CMFCDemoDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_RESET, &CMFCDemoDlg::OnBnClickedButtonReset)
 	ON_BN_CLICKED(IDC_BUTTON_INPAINT_V2, &CMFCDemoDlg::OnBnClickedButtonInpaintV2)
 	ON_BN_CLICKED(IDC_BUTTON_INPAINT_V3, &CMFCDemoDlg::OnBnClickedButtonInpaintV3)
+	ON_BN_CLICKED(IDC_BUTTON_INPAINT_V4, &CMFCDemoDlg::OnBnClickedButtonInpaintV4)
 END_MESSAGE_MAP()
 
 
@@ -74,7 +76,11 @@ BOOL CMFCDemoDlg::OnInitDialog()
 			sprintf_s(msg, "初始化B超分析算法失败! 错误码为%d", code);
 			MessageBox(msg);
 		}
-		if (SYY_NO_ERROR != (code = InitInpaint(m_hHandleInpaint))) {
+		if (SYY_NO_ERROR != (code = InitInpaint(m_hHandleInpaintPM, InpaintMode::PatchMatch))) {
+			sprintf_s(msg, "初始化图像修复算法失败! 错误码为%d", code);
+			MessageBox(msg);
+		}
+		if (SYY_NO_ERROR != (code = InitInpaint(m_hHandleInpaintCriminisi, InpaintMode::Criminisi))) {
 			sprintf_s(msg, "初始化图像修复算法失败! 错误码为%d", code);
 			MessageBox(msg);
 		}
@@ -510,11 +516,11 @@ void CMFCDemoDlg::Inpaint_v1()
 {
 	ErrorCode code;
 	Image inpaint,
-		src((char*)m_mOriImg.data, m_mOriImg.cols, m_mOriImg.rows),
-		mask((char*)m_mCurImg.data, m_mCurImg.cols, m_mCurImg.rows);
+		src((char*)m_mOriImg.data, m_mOriImg.cols, m_mOriImg.rows, m_mOriImg.channels()),
+		mask((char*)m_mMaskImg.data, m_mMaskImg.cols, m_mMaskImg.rows, m_mMaskImg.channels());
 
 	if (SYY_NO_ERROR != (code =
-		ExecuteInpaint(m_hHandleInpaint, src, mask, inpaint)))
+		ExecuteInpaint(m_hHandleInpaintPM, src, mask, inpaint)))
 	{
 		char msg[256];
 		sprintf_s(msg, "图像修复算法失败！ 错误码为： %d", code);
@@ -522,24 +528,34 @@ void CMFCDemoDlg::Inpaint_v1()
 		return;
 	}
 
-	m_mCurImg = cv::Mat(inpaint.nHeight, inpaint.nWidth, CV_8UC3, inpaint.pData).clone();
+	m_mCurImg = cv::Mat(inpaint.nHeight, inpaint.nWidth, inpaint.nChannels == 3 ? CV_8UC3 : CV_8UC1, inpaint.pData).clone();
 	m_mOriImg = m_mCurImg.clone();
+	m_mMaskImg = cv::Mat::zeros(m_mMaskImg.size(), m_mMaskImg.type());
 
 	ShowImg(m_mCurImg);
 }
 
 void CMFCDemoDlg::Inpaint_v2()
 {
-	cv::Mat inpaintImg;
+	ErrorCode code;
+	Image inpaint,
+		src((char*)m_mOriImg.data, m_mOriImg.cols, m_mOriImg.rows, m_mOriImg.channels()),
+		mask((char*)m_mMaskImg.data, m_mMaskImg.cols, m_mMaskImg.rows, m_mMaskImg.channels());
 
-/*-   **INPAINT_NS** Navier-Stokes based method [Navier01]
--   **INPAINT_TELEA** Method by Alexandru Telea @cite Telea04 .*/
+	if (SYY_NO_ERROR != (code =
+		ExecuteInpaint(m_hHandleInpaintCriminisi, src, mask, inpaint)))
+	{
+		char msg[256];
+		sprintf_s(msg, "图像修复算法失败！ 错误码为： %d", code);
+		MessageBox(msg);
+		return;
+	}
 
-	cv::inpaint(m_mCurImg, m_mMaskImg, inpaintImg, 5, cv::INPAINT_NS);
-	m_mCurImg = inpaintImg.clone();
-	m_mOriImg = inpaintImg.clone();
+	m_mCurImg = cv::Mat(inpaint.nHeight, inpaint.nWidth, inpaint.nChannels == 3 ? CV_8UC3 : CV_8UC1, inpaint.pData).clone();
+	m_mOriImg = m_mCurImg.clone();
+	m_mMaskImg = cv::Mat::zeros(m_mMaskImg.size(), m_mMaskImg.type());
 
-	ShowImg(inpaintImg);
+	ShowImg(m_mCurImg);
 }
 
 
@@ -576,9 +592,38 @@ void CMFCDemoDlg::Inpaint_v3()
 	/*-   **INPAINT_NS** Navier-Stokes based method [Navier01]
 	-   **INPAINT_TELEA** Method by Alexandru Telea @cite Telea04 .*/
 
-	cv::inpaint(m_mCurImg, m_mMaskImg, inpaintImg, 50, cv::INPAINT_TELEA);
+	cv::inpaint(m_mCurImg, m_mMaskImg, inpaintImg, 2, cv::INPAINT_TELEA);
 	m_mCurImg = inpaintImg.clone();
 	m_mOriImg = inpaintImg.clone();
+	m_mMaskImg = cv::Mat::zeros(m_mMaskImg.size(), m_mMaskImg.type());
 
 	ShowImg(inpaintImg);
+}
+
+void CMFCDemoDlg::Inpaint_v4()
+{
+	cv::Mat inpaintImg;
+
+/*-   **INPAINT_NS** Navier-Stokes based method [Navier01]
+-   **INPAINT_TELEA** Method by Alexandru Telea @cite Telea04 .*/
+
+	cv::inpaint(m_mCurImg, m_mMaskImg, inpaintImg, 2, cv::INPAINT_NS);
+	m_mCurImg = inpaintImg.clone();
+	m_mOriImg = inpaintImg.clone();
+	m_mMaskImg = cv::Mat::zeros(m_mMaskImg.size(), m_mMaskImg.type());
+
+	ShowImg(inpaintImg);
+}
+
+
+void CMFCDemoDlg::OnBnClickedButtonInpaintV4()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	if (m_mCurImg.empty())
+	{
+		MessageBox("请先选择图片!");
+		return;
+	}
+
+	Inpaint_v4();
 }
