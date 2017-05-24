@@ -104,6 +104,8 @@ namespace SYY {
 			const std::string root = FileSystem::GetCurExePath() + "\\config\\bscan_frcnn\\";
 			std::string prototxt = root + "zf_test.prototxt";
 			std::string caffemodel = root + "custom_data_zf_faster_rcnn_final_inpaint.caffemodel";
+			//std::string prototxt = root + "vgg16_test.prototxt";
+			//std::string caffemodel = root + "custom_data_vgg16_faster_rcnn_final.caffemodel";
 			const std::string config_file = root + "custom_data_config.json";
 
 			int gpu_idx = -1;

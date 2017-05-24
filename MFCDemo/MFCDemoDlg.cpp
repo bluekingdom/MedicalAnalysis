@@ -115,6 +115,9 @@ void CMFCDemoDlg::OnPaint()
 	else
 	{
 		CDialogEx::OnPaint();
+
+		if (false == m_mCurImg.empty())
+			ShowImg(m_mCurImg);
 	}
 }
 
@@ -281,7 +284,6 @@ bool CMFCDemoDlg::ShowImg(const cv::Mat& src)
 
 	CDC *pDC = pWnd->GetDC();//获得pictrue控件的DC   
 
-	c_mat.Draw(pDC->m_hDC, rect); //将图片画到Picture控件表示的矩形区域   
 	c_mat.Draw(pDC->m_hDC, rect); //将图片画到Picture控件表示的矩形区域   
 
 	ReleaseDC(pDC);
@@ -556,6 +558,8 @@ void CMFCDemoDlg::Inpaint_v2()
 	m_mMaskImg = cv::Mat::zeros(m_mMaskImg.size(), m_mMaskImg.type());
 
 	ShowImg(m_mCurImg);
+
+
 }
 
 
