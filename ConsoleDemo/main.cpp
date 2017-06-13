@@ -15,7 +15,7 @@ void test_BUAnalysis() {
 	if (res != SYY_NO_ERROR)
 		return;
 
-	cv::Mat img = cv::imread("C:\\blue\\data\\ÈéÏÙ°©Í¼Æ¬\\4aÀà\\±öÓî¶ğ\\1.2.826.0.1.3680043.2.461.8663564.1117253524.jpg");
+	cv::Mat img = cv::imread("D:\\blue\\data\\ÈéÏÙ°©Í¼Æ¬\\4aÀà\\±öÓî¶ğ\\1.2.826.0.1.3680043.2.461.8663564.1117253524.jpg");
 
 	BUAnalysisResult result;
 	res = ExecuteBUAnalysis(handle, (char* )img.data, img.cols, img.rows, &result);
@@ -43,12 +43,13 @@ void test_inpaint() {
 	ErrorCode res;
 	HANDLE handle;
 
-	res = InitInpaint(handle, InpaintMode::PatchMatch);
+	res = InitInpaint(handle, InpaintMode::Criminisi_P3);
 	if (res != SYY_NO_ERROR)
 		return;
 
-	auto srcImg = cv::imread("C:\\blue\\data\\ÈéÏÙ°©Í¼Æ¬\\4aÀà01\\³Â½ğÁ¬\\1.2.826.0.1.3680043.2.461.8630787.3708226823.jpg");
-	auto maskImg = cv::imread("C:\\blue\\code\\MedicalAnalysis\\ConsoleDemo\\1.2.826.0.1.3680043.2.461.8630787.3708226823.jpg");
+	auto srcImg = cv::imread("D:\\blue\\data\\ÈéÏÙ°©Í¼Æ¬\\4aÀà\\±öÓî¶ğ\\1.2.826.0.1.3680043.2.461.8663564.48427869.jpg");
+	auto maskImg = cv::imread("D:\\blue\\data\\ÈéÏÙ°©Í¼Æ¬\\4aÀà\\±öÓî¶ğ\\1.2.826.0.1.3680043.2.461.8663564.48427869.jpg");
+	//auto maskImg = cv::imread("C:\\blue\\code\\MedicalAnalysis\\ConsoleDemo\\1.2.826.0.1.3680043.2.461.8630787.3708226823.jpg");
 	cv::cvtColor(maskImg, maskImg, CV_RGB2GRAY);
 	Image inpaint, 
 		src((char*)srcImg.data, srcImg.cols, srcImg.rows, srcImg.channels()), 
@@ -74,8 +75,8 @@ void main() {
 	if (res != SYY_NO_ERROR)
 		return;
 
-	//test_BUAnalysis();
-	test_inpaint();
+	test_BUAnalysis();
+	//test_inpaint();
 
 	ReleaseSDK();
 }

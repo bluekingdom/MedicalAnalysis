@@ -24,8 +24,10 @@ Inpaint_P initInpaint()
 void addEltInpaintingPyramid(Inpaint_P imp, MaskedImage_P elt)
 {
     int inc = INCREASE_PYRAMID_SIZE_RATE;
-    if (inc<2)
+	if (inc < 2)
+	{
         inc = 2;
+	}
 
     if (imp->pyramid == NULL || imp->nbEltMaxPyramid == 0) {
         imp->nbEltMaxPyramid = inc;

@@ -20,6 +20,7 @@ namespace Inpainting {
 
 	private:
 		unsigned long m_nMode;
+		int m_nPatchSize;
 	};
 
 }

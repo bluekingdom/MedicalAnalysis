@@ -9,6 +9,7 @@ namespace SYY {
 			:m_pBUDetector(nullptr)
 			, m_pValidRegionDetector(nullptr)
 			, m_nCropVersion(0)
+			, m_nAnalysisMethod(None)
 		{
 
 		}
@@ -20,6 +21,8 @@ namespace SYY {
 			if (result.pLessionRects)
 			{
 				delete[] result.pLessionRects;
+				delete[] result.pLessionConfidence;
+
 				result.pLessionRects = nullptr;
 				result.nLessionsCount = 0;
 			}
@@ -31,24 +34,37 @@ namespace SYY {
 			}
 
 			cv::Rect validRect;
-			if (false == CropValidRegion(srcImg, validRect))
-			{
-				validRect.width = srcImg.cols;
-				validRect.height = srcImg.rows;
-			}
+
+			CropValidRegion(srcImg, validRect);
 
 			result.rCropRect = Common::CVRect2Rect(validRect);
 
 			std::vector<DeepLearning::Detect_Result> detections;
-			if (!m_pBUDetector || (false == m_pBUDetector->Detect_FRCNN(srcImg(validRect), detections)))
+
+			auto validImg = srcImg(validRect);
+
+			switch (m_nAnalysisMethod)
 			{
-				GLOG("Execute frcnn error!\n");
+			case SYY::MedicalAnalysis::BUAnalysis::None:
+				GLOG("Error: Please Init first!\n");
+				return SYY_SYS_ERROR;
+			case SYY::MedicalAnalysis::BUAnalysis::FRCNN:
+				if (false == AnalysisFRCNN(validImg, detections))
+					return SYY_SYS_ERROR;
+				break;
+			case SYY::MedicalAnalysis::BUAnalysis::SSD:
+				if (false == AnalysisSSD(validImg, detections))
+					return SYY_SYS_ERROR;
+				break;
+			default:
+				GLOG("Error: Unknown Analysis Method!\n");
 				return SYY_SYS_ERROR;
 			}
 
-			float threshold = 0.90f;
+			float threshold = 0.20f;
 
 			std::vector<Rect> rects;
+			std::vector<float> confs;
 			for (auto detect : detections)
 			{
 				if (detect.score < threshold)
@@ -64,15 +80,20 @@ namespace SYY {
 				r.y += validRect.y;
 
 				rects.push_back(r);
+				confs.push_back(detect.score);
 			}
 
 			result.nLessionsCount = rects.size();
 			if (result.nLessionsCount > 0)
+			{
 				result.pLessionRects = new Rect[result.nLessionsCount];
+				result.pLessionConfidence = new float[result.nLessionsCount];
+			}
 
 			for (int i = 0; i < result.nLessionsCount; i++)
 			{
 				result.pLessionRects[i] = rects[i];
+				result.pLessionConfidence[i] = confs[i];
 			}
 
 			//auto drawing = srcImg.clone();
@@ -84,6 +105,15 @@ namespace SYY {
 			return SYY_NO_ERROR;
 		}
 
+		bool CheckFile(const std::string& file) {
+			if (false == FileSystem::IsExists(file))
+			{
+				GLOG("file not exist: %s\n", file.c_str());
+				return false;
+			}
+			return true;
+		};
+
 		ErrorCode BUAnalysis::Init(unsigned long nMode)
 		{
 			if (!m_pBUDetector)
@@ -92,34 +122,11 @@ namespace SYY {
 			if (!m_pValidRegionDetector)
 				m_pValidRegionDetector = new DeepLearning;
 
-			const auto CheckFile = [](const std::string& file) -> bool {
-				if (false == FileSystem::IsExists(file))
-				{
-					GLOG("file not exist: %s\n", file.c_str());
-					return false;
-				}
-				return true;
-			};
+			const int gpu_idx = -1;
 
-			const std::string root = FileSystem::GetCurExePath() + "\\config\\bscan_frcnn\\";
-			std::string prototxt = root + "zf_test.prototxt";
-			std::string caffemodel = root + "custom_data_zf_faster_rcnn_final_inpaint.caffemodel";
-			//std::string prototxt = root + "vgg16_test.prototxt";
-			//std::string caffemodel = root + "custom_data_vgg16_faster_rcnn_final.caffemodel";
-			const std::string config_file = root + "custom_data_config.json";
-
-			int gpu_idx = -1;
-
-			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel) || false == CheckFile(config_file))
+			//if (false == InitFRCNN())
+			if (false == InitSSD())
 			{
-				return SYY_SYS_ERROR;
-			}
-
-			m_pBUDetector->SetBlasThreadNum(4);
-
-			if (!m_pBUDetector || false == m_pBUDetector->Init_FRCNN(prototxt, config_file, caffemodel, gpu_idx))
-			{
-				GLOG("m_pBUDetector init error!\n");
 				return SYY_SYS_ERROR;
 			}
 
@@ -131,8 +138,10 @@ namespace SYY {
 			{
 				m_nCropVersion = 2;
 
-				prototxt = root + "imgBox-test.prototxt";
-				caffemodel = root + "imgBox_zf_faster_rcnn_final.caffemodel";
+				auto root = FileSystem::GetCurExePath() + "\\config\\";
+				auto prototxt = root + "imgBox-test.prototxt";
+				auto caffemodel = root + "imgBox_zf_faster_rcnn_final.caffemodel";
+				auto config_file = root + "custom_data_config.json";
 
 				if (false == CheckFile(prototxt) || false == CheckFile(caffemodel))
 				{
@@ -154,12 +163,15 @@ namespace SYY {
 
 		ErrorCode BUAnalysis::Release()
 		{
-			if (m_pBUDetector)
+			switch (m_nAnalysisMethod)
 			{
-				m_pBUDetector->Release_FRCNN();
-				delete m_pBUDetector;
+			case SYY::MedicalAnalysis::BUAnalysis::FRCNN:
+				ReleaseFRCNN();
+				break;
+			case SYY::MedicalAnalysis::BUAnalysis::SSD:
+				ReleaseSSD();
+				break;
 			}
-			m_pBUDetector = nullptr;
 
 			if (m_pValidRegionDetector)
 			{
@@ -361,14 +373,21 @@ namespace SYY {
 			if (m_nCropVersion == 0)
 				return false;
 
+			bool res = false;
 			switch (m_nCropVersion)
 			{
 			case 1:
-				CropValidRegion_V1(srcImg, validRegion);
+				res = CropValidRegion_V1(srcImg, validRegion);
 				break;
 			case 2:
-				CropValidRegion_V2(srcImg, validRegion);
+				res = CropValidRegion_V2(srcImg, validRegion);
 				break;
+			}
+
+			if (res == false)
+			{
+				validRegion.width = srcImg.cols;
+				validRegion.height = srcImg.rows;
 			}
 
 			return true;
@@ -413,5 +432,108 @@ namespace SYY {
 
 			return true;
 		}
+
+		bool BUAnalysis::InitFRCNN()
+		{
+			const std::string root = FileSystem::GetCurExePath() + "\\config\\";
+			std::string prototxt = root + "zf_test.prototxt";
+			std::string caffemodel = root + "custom_data_zf_faster_rcnn_final.caffemodel";
+			//std::string prototxt = root + "vgg16_test.prototxt";
+			//std::string caffemodel = root + "custom_data_vgg16_faster_rcnn_final.caffemodel";
+			const std::string config_file = root + "custom_data_config.json";
+
+			int gpu_idx = -1;
+
+			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel) || false == CheckFile(config_file))
+			{
+				return false;
+			}
+
+			m_pBUDetector->SetBlasThreadNum(4);
+
+			if (!m_pBUDetector || false == m_pBUDetector->Init_FRCNN(prototxt, config_file, caffemodel, gpu_idx))
+			{
+				GLOG("m_pBUDetector init error!\n");
+				return false;
+			}
+			
+			m_nAnalysisMethod = FRCNN;
+
+			return true;
+		}
+
+		bool BUAnalysis::AnalysisFRCNN(const cv::Mat& srcImg, std::vector<DeepLearning::Detect_Result>& dets)
+		{
+			if (!m_pBUDetector || (false == m_pBUDetector->Detect_FRCNN(srcImg, dets)))
+			{
+				GLOG("Execute frcnn error!\n");
+				return false;
+			}
+			return true;
+		}
+
+		void BUAnalysis::ReleaseFRCNN()
+		{
+			if (m_pBUDetector)
+			{
+				m_pBUDetector->Release_FRCNN();
+				delete m_pBUDetector;
+			}
+			m_pBUDetector = nullptr;
+		}
+
+		bool BUAnalysis::InitSSD()
+		{
+			const std::string root = FileSystem::GetCurExePath() + "\\config\\";
+			//std::string prototxt = root + "ssd_deploy_vgg_300.prototxt";
+			//std::string caffemodel = root + "b-scan_iter_1000.caffemodel";
+
+			std::string prototxt = root + "ssd_deploy_vgg_300_v2.prototxt";
+			std::string caffemodel = root + "b-scan_iter_2000.caffemodel";
+			//std::string prototxt = root + "ssd_deploy_zf_500.prototxt";
+			//std::string caffemodel = root + "b-scan-ssd-500-zf.caffemodel";
+
+			bool is_gpu= false;
+
+			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel))
+			{
+				return false;
+			}
+
+			m_pBUDetector->SetBlasThreadNum(4);
+			std::vector<int> meanvalue = {102, 117, 123};
+
+			if (!m_pBUDetector || false == m_pBUDetector->Init(prototxt, meanvalue, caffemodel, is_gpu))
+			{
+				GLOG("m_pBUDetector init error!\n");
+				return false;
+			}
+			
+			m_nAnalysisMethod = SSD;
+
+			return true;
+		}
+
+		bool BUAnalysis::AnalysisSSD(const cv::Mat& srcImg, std::vector<DeepLearning::Detect_Result>& dets)
+		{
+			if (!m_pBUDetector || false == m_pBUDetector->Detect_SSD(srcImg, dets))
+			{
+				GLOG("Error: Detect_SSD fail!\n");
+				return false;
+			}
+
+			return true;
+		}
+
+		void BUAnalysis::ReleaseSSD()
+		{
+			if (m_pBUDetector)
+			{
+				m_pBUDetector->Release();
+				delete m_pBUDetector;
+			}
+			m_pBUDetector = nullptr;
+		}
+
 	}
 }

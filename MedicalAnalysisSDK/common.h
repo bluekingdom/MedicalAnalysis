@@ -17,3 +17,6 @@
 // dllÊä³ö¿ª¹Ø
 #define MEDICAL_ANALYSIS_SDK_EXPORTS
 
+#define MEDICAL_ANALYSIS_API
+
+#define INPAINTING_API

@@ -15,6 +15,7 @@
 #include "MedicalAnalysisSDK.h"
 #include "Algorithm/AlgorithmManager.h"
 #include  "Algorithm/Common/glog.h"
+#include "common.h"
 
 
 namespace SYY {
@@ -68,19 +69,13 @@ namespace SYY {
 
 		MEDICAL_ANALYSIS_SDK_API ErrorCode InitBUAnalysis(OUT HANDLE& hHandle, IN unsigned long nMode)
 		{
-			if (sg_pAlgorithmManager == nullptr)
-			{
-				return SYY_SDK_NO_INIT;
-			}
+			CHECK_ALGO_INIT();
 			return sg_pAlgorithmManager->InitBUAnalysis(hHandle, nMode);
 		}
 
 		MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseBUAnalysis(INOUT HANDLE& hHandle)
 		{
-			if (sg_pAlgorithmManager == nullptr)
-			{
-				return SYY_SDK_NO_INIT;
-			}
+			CHECK_ALGO_INIT();
 			return sg_pAlgorithmManager->ReleaseBUAnalysis(hHandle);
 		}
 
@@ -88,12 +83,10 @@ namespace SYY {
 			IN char* pImg, IN int nImgWidth, IN int nImgHeight,
 			OUT BUAnalysisResult* pResult)
 		{
-			if (sg_pAlgorithmManager == nullptr)
-			{
-				return SYY_SDK_NO_INIT;
-			}
+			CHECK_ALGO_INIT();
 			return sg_pAlgorithmManager->ExecuteBUAnalysis(hHandle, pImg, nImgWidth, nImgHeight, pResult);
 		}
+
 	}
 
 	namespace Inpainting {

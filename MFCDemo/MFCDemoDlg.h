@@ -49,6 +49,7 @@ protected:
 	bool AdjustInputMatSizeAndRect(const cv::Mat& src, cv::Mat&dst, CRect& rect);
 	void MatToCImage(const cv::Mat& mat, CImage& cImage);
 	void ShowImgFromFileIdx(int idx);
+	void SaveCurImg();
 	void Redraw();
 	void ScreenPt2ImgPt(CPoint snPt, cv::Point& imgPt);
 	void Inpaint_v1();
@@ -66,6 +67,7 @@ private:
 	cv::Mat m_mMaskImg;
 	cv::Size m_resizeImgSize;
 
+	SYY::MedicalAnalysis::BUAnalysisResult m_BUresult;
 	SYY::HANDLE m_hHandleBUAnalysis;
 	SYY::HANDLE m_hHandleInpaintPM;
 	SYY::HANDLE m_hHandleInpaintCriminisi;

@@ -26,6 +26,7 @@ namespace SYY {
 		// ERROR
 		SYY_SYS_ERROR = 10,					// 系统错误
 		SYY_LOG_INIT_NO_PERMISSION = 11,	// 日志初始化失败，程序无权限
+		SYY_NO_IMPLEMENTION = 11,			// 算法未实现
 	};
 }
 

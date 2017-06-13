@@ -42,8 +42,24 @@ namespace Inpainting {
 		{
 			res = PatchMatch_v1(srcImg, maskImg, inpaintImg);
 		}
-		else if (m_nMode & InpaintMode::Criminisi)
+		else if (m_nMode & InpaintMode::Criminisi_P1)
 		{
+			m_nPatchSize = 1;
+			res = Criminisi(srcImg, maskImg, inpaintImg);
+		}
+		else if (m_nMode & InpaintMode::Criminisi_P3)
+		{
+			m_nPatchSize = 3;
+			res = Criminisi(srcImg, maskImg, inpaintImg);
+		}
+		else if (m_nMode & InpaintMode::Criminisi_P5)
+		{
+			m_nPatchSize = 5;
+			res = Criminisi(srcImg, maskImg, inpaintImg);
+		}
+		else if (m_nMode & InpaintMode::Criminisi_P7)
+		{
+			m_nPatchSize = 7;
 			res = Criminisi(srcImg, maskImg, inpaintImg);
 		}
 
@@ -214,7 +230,7 @@ namespace Inpainting {
 			}
 		}
 
-		const int patchSize = 5;
+		const int patchSize = m_nPatchSize;
 
 		inpainter.setSourceImage(srcImg);
 		inpainter.setTargetMask(targetMask);

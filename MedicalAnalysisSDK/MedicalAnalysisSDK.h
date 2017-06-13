@@ -60,8 +60,11 @@ namespace SYY {
 namespace Inpainting{
 	enum InpaintMode
 	{
-		PatchMatch = 0x1,
-		Criminisi = 0x2,
+		PatchMatch = 0x01,
+		Criminisi_P1 = 0x10,
+		Criminisi_P3 = 0x20,
+		Criminisi_P5 = 0x40,
+		Criminisi_P7 = 0x80,
 	};
 
 	MEDICAL_ANALYSIS_SDK_API ErrorCode InitInpaint(
@@ -88,6 +91,7 @@ namespace MedicalAnalysis {
 
 		int nLessionsCount;			// 病灶数量
 		Rect* pLessionRects;		// 病灶区域
+		float* pLessionConfidence;	// 病灶置信值
 	};
 
 	enum BUAnalysisMode{

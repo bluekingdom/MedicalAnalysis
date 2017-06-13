@@ -80,7 +80,7 @@ BOOL CMFCDemoDlg::OnInitDialog()
 			sprintf_s(msg, "³õÊ¼»¯Í¼ÏñÐÞ¸´Ëã·¨Ê§°Ü! ´íÎóÂëÎª%d", code);
 			MessageBox(msg);
 		}
-		if (SYY_NO_ERROR != (code = InitInpaint(m_hHandleInpaintCriminisi, InpaintMode::Criminisi))) {
+		if (SYY_NO_ERROR != (code = InitInpaint(m_hHandleInpaintCriminisi, InpaintMode::Criminisi_P5))) {
 			sprintf_s(msg, "³õÊ¼»¯Í¼ÏñÐÞ¸´Ëã·¨Ê§°Ü! ´íÎóÂëÎª%d", code);
 			MessageBox(msg);
 		}
@@ -192,9 +192,10 @@ void CMFCDemoDlg::OnBnClickedButtonAnalysis()
 		return;
 	}
 
-	auto img = m_mCurImg.clone();
+	auto img = m_mCurImg;
 
-	BUAnalysisResult result;
+	auto& result = m_BUresult;
+
 	ErrorCode code;
 	bool bIsCrop = true;
 	if (SYY_NO_ERROR != (code = 
@@ -209,19 +210,25 @@ void CMFCDemoDlg::OnBnClickedButtonAnalysis()
 	cv::Rect cropRect(result.rCropRect.x, result.rCropRect.y, result.rCropRect.w, result.rCropRect.h);
 	cv::rectangle(img, cropRect, cv::Scalar(255, 255, 255), 4);
 
+	std::stringstream ss;
+
 	for (int i = 0; i < result.nLessionsCount; i++)
 	{
 		auto r = result.pLessionRects[i];
 		cv::Rect rect(r.x, r.y, r.w, r.h);
-		cv::rectangle(img, rect, cv::Scalar(255, 255, 255), 3);
+		cv::rectangle(img, rect, cv::Scalar(255, 0, 255), 1);
+		ss.str("");
+		ss.precision(3);
+		ss << result.pLessionConfidence[i];
+		cv::putText(img, ss.str(), (rect.br() + rect.tl()) / 2, 1, 2, cv::Scalar(255, 255, 255), 1);
 	}
 
 	ShowImg(img);
 }
 
-
 void CMFCDemoDlg::OnSelchangeListFilelist()
 {
+	
 	CListBox* listbox = (CListBox*)GetDlgItem(IDC_LIST_FILELIST);
 	m_nCurFileIdx = listbox->GetCurSel();
 
@@ -280,7 +287,7 @@ bool CMFCDemoDlg::ShowImg(const cv::Mat& src)
 	m_resizeImgSize.height = rect.Height();
 
 	CImage c_mat;
-	MatToCImage(src, c_mat);
+	MatToCImage(resize_img, c_mat);
 
 	CDC *pDC = pWnd->GetDC();//»ñµÃpictrue¿Ø¼þµÄDC   
 
@@ -596,7 +603,7 @@ void CMFCDemoDlg::Inpaint_v3()
 	/*-   **INPAINT_NS** Navier-Stokes based method [Navier01]
 	-   **INPAINT_TELEA** Method by Alexandru Telea @cite Telea04 .*/
 
-	cv::inpaint(m_mCurImg, m_mMaskImg, inpaintImg, 2, cv::INPAINT_TELEA);
+	cv::inpaint(m_mCurImg, m_mMaskImg, inpaintImg, 20, cv::INPAINT_TELEA);
 	m_mCurImg = inpaintImg.clone();
 	m_mOriImg = inpaintImg.clone();
 	m_mMaskImg = cv::Mat::zeros(m_mMaskImg.size(), m_mMaskImg.type());
@@ -611,7 +618,7 @@ void CMFCDemoDlg::Inpaint_v4()
 /*-   **INPAINT_NS** Navier-Stokes based method [Navier01]
 -   **INPAINT_TELEA** Method by Alexandru Telea @cite Telea04 .*/
 
-	cv::inpaint(m_mCurImg, m_mMaskImg, inpaintImg, 2, cv::INPAINT_NS);
+	cv::inpaint(m_mCurImg, m_mMaskImg, inpaintImg, 20, cv::INPAINT_NS);
 	m_mCurImg = inpaintImg.clone();
 	m_mOriImg = inpaintImg.clone();
 	m_mMaskImg = cv::Mat::zeros(m_mMaskImg.size(), m_mMaskImg.type());
@@ -631,3 +638,15 @@ void CMFCDemoDlg::OnBnClickedButtonInpaintV4()
 
 	Inpaint_v4();
 }
+
+void CMFCDemoDlg::SaveCurImg()
+{
+	if (m_mCurImg.empty())
+	{
+		return;
+	}
+	auto file = m_vFiles[m_nCurFileIdx];
+
+	cv::imwrite(file, m_mCurImg);
+}
+
