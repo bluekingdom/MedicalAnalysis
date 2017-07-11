@@ -8,24 +8,26 @@ namespace SYY {
 		BUAnalysis::BUAnalysis()
 			:m_pBUDetector(nullptr)
 			, m_pValidRegionDetector(nullptr)
+			, m_pGradingClassifier(nullptr)
+			, m_pLessionClassifier(nullptr)
 			, m_nCropVersion(0)
 			, m_nAnalysisMethod(None)
 		{
-
 		}
 
 		ErrorCode BUAnalysis::Analysis(const cv::Mat& srcImg, BUAnalysisResult& result)
 		{
 			GLOG("BUAnalysis::Analysis info: enter!\n");
 
-			if (result.pLessionRects)
-			{
-				delete[] result.pLessionRects;
-				delete[] result.pLessionConfidence;
+			//if (result.pLessionRects)
+			//{
+			//	delete[] result.pLessionRects;
+			//	delete[] result.pLessionConfidence;
+			//	delete[] result.pLessionTypes;
 
-				result.pLessionRects = nullptr;
+			//	result.pLessionRects = nullptr;
 				result.nLessionsCount = 0;
-			}
+			//}
 
 			if (srcImg.empty())
 			{
@@ -33,15 +35,26 @@ namespace SYY {
 				return SYY_SYS_ERROR;
 			}
 
+			// get valid rect
 			cv::Rect validRect;
 
 			CropValidRegion(srcImg, validRect);
 
 			result.rCropRect = Common::CVRect2Rect(validRect);
 
-			std::vector<DeepLearning::Detect_Result> detections;
-
 			auto validImg = srcImg(validRect);
+
+			// classify grade
+			std::vector<int> grades;
+			if (false == m_pGradingClassifier->Classify(validImg, grades))
+			{
+				GLOG("ERROR: grade classify error!\n");
+				return SYY_SYS_ERROR;
+			}
+			result.nGrading = (LessionGrading)grades[0];
+
+			// detect lession
+			std::vector<DeepLearning::Detect_Result> detections;
 
 			switch (m_nAnalysisMethod)
 			{
@@ -53,7 +66,8 @@ namespace SYY {
 					return SYY_SYS_ERROR;
 				break;
 			case SYY::MedicalAnalysis::BUAnalysis::SSD:
-				if (false == AnalysisSSD(validImg, detections))
+			case SYY::MedicalAnalysis::BUAnalysis::SSD_MULTI:
+				if (false == AnalysisSSD(srcImg, validRect, detections))
 					return SYY_SYS_ERROR;
 				break;
 			default:
@@ -61,7 +75,7 @@ namespace SYY {
 				return SYY_SYS_ERROR;
 			}
 
-			float threshold = 0.20f;
+			float threshold = 0.10f;
 
 			std::vector<Rect> rects;
 			std::vector<float> confs;
@@ -79,21 +93,41 @@ namespace SYY {
 				r.x += validRect.x;
 				r.y += validRect.y;
 
+				r.x = std::max(0, r.x);
+				r.y = std::max(0, r.y);
+				r.w = std::min(srcImg.cols - r.x, r.w);
+				r.h = std::min(srcImg.rows - r.y, r.h);
+
 				rects.push_back(r);
 				confs.push_back(detect.score);
 			}
 
-			result.nLessionsCount = rects.size();
+			result.nLessionsCount = std::min((int)rects.size(), BUAnalysisResult::MAX_LEN);
+
 			if (result.nLessionsCount > 0)
 			{
-				result.pLessionRects = new Rect[result.nLessionsCount];
-				result.pLessionConfidence = new float[result.nLessionsCount];
-			}
+				// lession type classify
+				std::vector<cv::Mat> imgs;
+				for (auto rect : rects) imgs.push_back(srcImg(Common::Rect2CVRect(rect)));
 
-			for (int i = 0; i < result.nLessionsCount; i++)
-			{
-				result.pLessionRects[i] = rects[i];
-				result.pLessionConfidence[i] = confs[i];
+				std::vector<DeepLearning::Classify_Result> cls_res_batch;
+				if (false == m_pLessionClassifier->Classify_Batch(imgs, cls_res_batch))
+				{
+					GLOG("Error: m_pLessionClassifier->Classify_Batch fail!\n");
+					return SYY_SYS_ERROR;
+				}
+
+				// set result
+				//result.pLessionRects = new Rect[result.nLessionsCount];
+				//result.pLessionConfidence = new float[result.nLessionsCount];
+				//result.pLessionTypes = new LessionType[result.nLessionsCount];
+
+				for (int i = 0; i < result.nLessionsCount; i++)
+				{
+					result.pLessionRects[i] = rects[i];
+					result.pLessionConfidence[i] = confs[i];
+					result.pLessionTypes[i] = (LessionType)cls_res_batch[i].vOutput[0];
+				}
 			}
 
 			//auto drawing = srcImg.clone();
@@ -124,8 +158,18 @@ namespace SYY {
 
 			const int gpu_idx = -1;
 
-			//if (false == InitFRCNN())
-			if (false == InitSSD())
+			bool res = false;
+
+			if (nMode & BUAnalysisMode::DetectMore)
+			{
+				res = InitSSDMore();
+			}
+			else if (nMode & BUAnalysisMode::DetectAccurate)
+			{
+				res = InitSSDAccurate();
+			}
+
+			if (false == res)
 			{
 				return SYY_SYS_ERROR;
 			}
@@ -138,24 +182,30 @@ namespace SYY {
 			{
 				m_nCropVersion = 2;
 
-				auto root = FileSystem::GetCurExePath() + "\\config\\";
-				auto prototxt = root + "imgBox-test.prototxt";
-				auto caffemodel = root + "imgBox_zf_faster_rcnn_final.caffemodel";
-				auto config_file = root + "custom_data_config.json";
-
-				if (false == CheckFile(prototxt) || false == CheckFile(caffemodel))
+				if (false == CropInit_V2())
 				{
 					return SYY_SYS_ERROR;
 				}
 
-				m_pValidRegionDetector->SetBlasThreadNum(4);
+			}
+			else if (nMode & BUAnalysisMode::Crop_V3)
+			{
+				m_nCropVersion = 3;
 
-				if (!m_pValidRegionDetector ||
-					false == m_pValidRegionDetector->Init_FRCNN(prototxt, config_file, caffemodel, gpu_idx))
+				if (false == CropInit_V3())
 				{
-					GLOG("m_pValidRegionDetector init error!\n");
 					return SYY_SYS_ERROR;
 				}
+			}
+
+			if (false == InitGradeClassifier())
+			{
+				return SYY_SYS_ERROR;
+			}
+
+			if (false == InitLessionClassifier())
+			{
+				return SYY_SYS_ERROR;
 			}
 
 			return SYY_NO_ERROR;
@@ -175,10 +225,28 @@ namespace SYY {
 
 			if (m_pValidRegionDetector)
 			{
-				m_pValidRegionDetector->Release_FRCNN();
+				if (m_nCropVersion == 2)
+					m_pValidRegionDetector->Release_FRCNN();
+				else 
+					m_pValidRegionDetector->Release();
+
 				delete m_pValidRegionDetector;
 			}
 			m_pValidRegionDetector = nullptr;
+
+			if (m_pGradingClassifier)
+			{
+				m_pGradingClassifier->Release();
+				delete m_pGradingClassifier;
+			}
+			m_pGradingClassifier = nullptr;
+
+			if (m_pLessionClassifier)
+			{
+				m_pLessionClassifier->Release();
+				delete m_pLessionClassifier;
+			}
+			m_pLessionClassifier = nullptr;
 
 			return SYY_NO_ERROR;
 		}
@@ -305,7 +373,13 @@ namespace SYY {
 			std::vector<std::vector<cv::Point> > contours;
 			std::vector<cv::Vec4i> hierarchy;
 
-			cv::findContours(srcImg.clone(), contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+			auto img = srcImg.clone();
+			if (img.channels() == 3)
+			{
+				cv::cvtColor(img, img, CV_RGB2GRAY);
+			}
+
+			cv::findContours(img, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 			int maxArea = 0;
 
 			//bbox.clear();
@@ -326,7 +400,6 @@ namespace SYY {
 		{
 			cv::Point pt1, pt2;
 			int c = 1;
-			float radio;
 
 			while (1)
 			{
@@ -382,6 +455,9 @@ namespace SYY {
 			case 2:
 				res = CropValidRegion_V2(srcImg, validRegion);
 				break;
+			case 3:
+				res = CropValidRegion_V3(srcImg, validRegion);
+				break;
 			}
 
 			if (res == false)
@@ -405,7 +481,7 @@ namespace SYY {
 			if (false == m_pValidRegionDetector->Detect_FRCNN(srcImg, detections))
 			{
 				GLOG("Execute frcnn error!\n");
-				return SYY_SYS_ERROR;
+				return false;
 			}
 
 			if (detections.size() == 0)
@@ -421,7 +497,7 @@ namespace SYY {
 			}
 
 			auto bbox = detections[0].bbox;
-			const float r = 0.01;
+			const float r = 0.00;
 			int w = bbox[2] - bbox[0];
 			int h = bbox[3] - bbox[1];
 			int x = std::max(0, std::min(srcImg.cols, int(bbox[0] - w * r)));
@@ -429,6 +505,25 @@ namespace SYY {
 			w = std::min(srcImg.cols - x, int(w * (1 + 2 * r)));
 			h = std::min(srcImg.rows - y, int(h * (1 + 2 * r)));
 			validRegion = cv::Rect(x, y, w, h);
+
+			// adjust rect
+			//std::vector<cv::Rect> bboxes;
+			//GetContoursBBox(srcImg(validRegion), bboxes);
+
+			//if (bboxes.size() > 0)
+			//{
+			//	cv::Rect r = bboxes[0];
+			//	for (int i = 1; i < bboxes.size(); i++)
+			//	{
+			//		r |= bboxes[i];
+			//	}
+
+			//	r.x += validRegion.x;
+			//	r.y += validRegion.y;
+
+			//	validRegion = r;
+			//}
+			// end adjust rect
 
 			return true;
 		}
@@ -449,7 +544,7 @@ namespace SYY {
 				return false;
 			}
 
-			m_pBUDetector->SetBlasThreadNum(4);
+			m_pBUDetector->SetBlasThreadNum(s_nNumBlasThread);
 
 			if (!m_pBUDetector || false == m_pBUDetector->Init_FRCNN(prototxt, config_file, caffemodel, gpu_idx))
 			{
@@ -482,25 +577,28 @@ namespace SYY {
 			m_pBUDetector = nullptr;
 		}
 
-		bool BUAnalysis::InitSSD()
+		bool BUAnalysis::InitSSDMore()
 		{
 			const std::string root = FileSystem::GetCurExePath() + "\\config\\";
 			//std::string prototxt = root + "ssd_deploy_vgg_300.prototxt";
 			//std::string caffemodel = root + "b-scan_iter_1000.caffemodel";
 
-			std::string prototxt = root + "ssd_deploy_vgg_300_v2.prototxt";
-			std::string caffemodel = root + "b-scan_iter_2000.caffemodel";
-			//std::string prototxt = root + "ssd_deploy_zf_500.prototxt";
-			//std::string caffemodel = root + "b-scan-ssd-500-zf.caffemodel";
+			//std::string prototxt = root + "ssd_deploy_vgg_300.prototxt";
+			std::string prototxt = root + Config::GetConfValue("analysis_more.prototxt");
+
+			//std::string caffemodel = root + "20170629-b-scan_iter_30000.caffemodel";
+			//std::string caffemodel = root + "20170627-b-scan-lession_iter_30000.caffemodel";
+			std::string caffemodel = root + Config::GetConfValue("analysis_more.caffemodel");
+			//std::string caffemodel = root + "20170621-b-scan_iter_59000.caffemodel";
 
 			bool is_gpu= false;
 
-			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel))
+			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel)) 
 			{
 				return false;
 			}
 
-			m_pBUDetector->SetBlasThreadNum(4);
+			m_pBUDetector->SetBlasThreadNum(s_nNumBlasThread);
 			std::vector<int> meanvalue = {102, 117, 123};
 
 			if (!m_pBUDetector || false == m_pBUDetector->Init(prototxt, meanvalue, caffemodel, is_gpu))
@@ -514,15 +612,130 @@ namespace SYY {
 			return true;
 		}
 
-		bool BUAnalysis::AnalysisSSD(const cv::Mat& srcImg, std::vector<DeepLearning::Detect_Result>& dets)
+		bool BUAnalysis::InitSSDAccurate()
 		{
-			if (!m_pBUDetector || false == m_pBUDetector->Detect_SSD(srcImg, dets))
+			const std::string root = FileSystem::GetCurExePath() + "\\config\\";
+
+			//std::string prototxt = root + "ssd_deploy_vgg_300_accurate.prototxt";
+			//std::string caffemodel = root + "20170705-b-scan_iter_240000.caffemodel";
+
+			std::string prototxt = root + Config::GetConfValue("analysis_accurate.prototxt");
+			std::string caffemodel = root + Config::GetConfValue("analysis_accurate.caffemodel");
+
+			bool is_gpu= false;
+
+			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel))
 			{
-				GLOG("Error: Detect_SSD fail!\n");
 				return false;
 			}
 
+			m_pBUDetector->SetBlasThreadNum(s_nNumBlasThread);
+			std::vector<int> meanvalue = {102, 117, 123};
+
+			if (!m_pBUDetector || false == m_pBUDetector->Init(prototxt, meanvalue, caffemodel, is_gpu))
+			{
+				GLOG("m_pBUDetector init error!\n");
+				return false;
+			}
+			
+			m_nAnalysisMethod = SSD_MULTI;
+
 			return true;
+		}
+
+		bool BUAnalysis::AnalysisSSD(const cv::Mat& srcImg, const cv::Rect& validRect, std::vector<DeepLearning::Detect_Result>& dets)
+		{
+			if (m_nAnalysisMethod == SSD)
+			{
+				if (!m_pBUDetector || false == m_pBUDetector->Detect_SSD(srcImg(validRect), dets))
+				{
+					GLOG("Error: Detect_SSD fail!\n");
+					return false;
+				}
+
+				return true;
+			}
+			
+			if (m_nAnalysisMethod == SSD_MULTI)
+			{
+				float radio = 0.05f;
+				int rx = validRect.width * radio;
+				int ry = validRect.height * radio;
+
+				auto r = validRect;
+
+				std::vector<cv::Vec2i> offsets{
+					{ 0, 0 }, { -rx, 0 }, { rx, 0 }, { 0, -ry }, {0, ry}
+				};
+
+				std::vector<cv::Rect> rects;
+				for (auto o : offsets) rects.push_back(cv::Rect(r.x + o[0], r.y + o[1], r.width, r.height));
+
+				//std::vector<cv::Rect> rects{ 
+				//	{ r }, 
+				//	{ r.x - rx, r.y, r.width, r.height },
+				//	{ r.x + rx, r.y, r.width, r.height },
+				//	{ r.x, r.y - ry, r.width, r.height },
+				//	{ r.x, r.y + ry, r.width, r.height },
+				//};
+
+				std::vector<cv::Mat> imgs;
+				for (auto r : rects)
+				{
+					r.x = std::max(0, r.x);
+					r.y = std::max(0, r.y);
+					r.width = std::min(srcImg.cols - r.x, r.width);
+					r.height = std::min(srcImg.rows - r.y, r.height);
+					imgs.push_back(srcImg(r));
+				}
+
+				std::vector<DeepLearning::Detect_Result_Batch> vec_result_batch;
+				if (!m_pBUDetector || false == m_pBUDetector->Detect_SSD_Batch(imgs, vec_result_batch))
+				{
+					GLOG("Error: Detect_SSD_Batch fail!\n");
+					return false;
+				}
+
+				dets.clear();
+
+				int num_batch = vec_result_batch.size();
+				dets = vec_result_batch[0].vDetectRst;
+				for (int i = 1; i < num_batch; i++)
+				{
+					auto offset = offsets[i];
+					int num_detect_rst = vec_result_batch[i].vDetectRst.size();
+					auto vDetRst = vec_result_batch[i].vDetectRst;
+					for (int j = 0; j < num_detect_rst; j++)
+					{
+						auto bbox = vDetRst[j].bbox;
+						cv::Rect a(bbox[0] - offset[0], bbox[1] - offset[1], bbox[2] - bbox[0], bbox[3] - bbox[1]); 
+						float max_overlay = 0.f;
+						int idx = -1;
+						for (int dets_idx = 0; dets_idx < dets.size(); dets_idx++)
+						{
+							auto bbox = dets[dets_idx].bbox;
+							cv::Rect b(bbox[0] - offsets[0][0], bbox[1] - offsets[0][1], bbox[2] - bbox[0], bbox[3] - bbox[1]);
+
+							float l = Common::IOU(a, b);
+							if (max_overlay < l && l > 0.5f)
+							{
+								max_overlay = l;
+								idx = dets_idx;
+							}
+						}
+
+						if (idx >= 0 && vDetRst[j].score > dets[idx].score)
+						{
+							dets[idx] = vDetRst[j];
+						}
+
+					}
+				}
+				return true;
+			}
+
+			GLOG("Error: AnalysisSSD error execute path!\n");
+			return false;
 		}
 
 		void BUAnalysis::ReleaseSSD()
@@ -533,6 +746,186 @@ namespace SYY {
 				delete m_pBUDetector;
 			}
 			m_pBUDetector = nullptr;
+		}
+
+		bool BUAnalysis::CropInit_V2()
+		{
+			auto root = FileSystem::GetCurExePath() + "\\config\\";
+			//auto prototxt = root + "imgBox-test.prototxt";
+			//auto caffemodel = root + "imgBox_zf_faster_rcnn_final.caffemodel";
+			//auto config_file = root + "custom_data_config.json";
+
+			auto prototxt = root + Config::GetConfValue("crop_v2.prototxt");
+			auto caffemodel = root + Config::GetConfValue("crop_v2.caffemodel");
+			auto config_file = root + Config::GetConfValue("crop_v2.config");
+
+			int gpu_idx = -1;
+
+			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel))
+			{
+				return false;
+			}
+
+			m_pValidRegionDetector->SetBlasThreadNum(s_nNumBlasThread);
+
+			if (!m_pValidRegionDetector ||
+				false == m_pValidRegionDetector->Init_FRCNN(prototxt, config_file, caffemodel, gpu_idx))
+			{
+				GLOG("m_pValidRegionDetector init error!\n");
+				return false;
+			}
+			return true;
+		}
+
+		bool BUAnalysis::CropInit_V3()
+		{
+			const std::string root = FileSystem::GetCurExePath() + "\\config\\";
+
+			std::string prototxt = root + "imgBox-ssd-deploy.prototxt";
+			std::string caffemodel = root + "imgBox_iter_38000.caffemodel";
+
+			bool is_gpu= false;
+
+			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel))
+			{
+				return false;
+			}
+
+			m_pValidRegionDetector->SetBlasThreadNum(s_nNumBlasThread);
+			std::vector<int> meanvalue = {102, 117, 123};
+
+			if (!m_pValidRegionDetector || false == m_pValidRegionDetector->Init(prototxt, meanvalue, caffemodel, is_gpu))
+			{
+				GLOG("m_pValidRegionDetector init error!\n");
+				return false;
+			}
+			
+			return true;
+		}
+
+		bool BUAnalysis::CropValidRegion_V3(const cv::Mat& srcImg, cv::Rect& validRegion)
+		{
+			if (!m_pValidRegionDetector)
+			{
+				GLOG("m_pValidRegionDetector is null!\n");
+				return false;
+			}
+
+			std::vector<DeepLearning::Detect_Result> detections;
+			if (false == m_pValidRegionDetector->Detect_SSD(srcImg, detections))
+			{
+				GLOG("Execute frcnn error!\n");
+				return false;
+			}
+
+			if (detections.size() == 0)
+			{
+				GLOG("detect valid region fail!\n");
+				return false;
+			}
+			else if (detections.size() >= 2)
+			{
+				std::sort(detections.begin(), detections.end(), [](DeepLearning::Detect_Result& rst1, DeepLearning::Detect_Result& rst2){
+					return rst1.score > rst2.score;
+				});
+			}
+
+			auto bbox = detections[0].bbox;
+			const float r = 0.00;
+			int w = bbox[2] - bbox[0];
+			int h = bbox[3] - bbox[1];
+			int x = std::max(0, std::min(srcImg.cols, int(bbox[0] - w * r)));
+			int y = std::max(0, std::min(srcImg.rows, int(bbox[1] - h * r)));
+			w = std::min(srcImg.cols - x, int(w * (1 + 2 * r)));
+			h = std::min(srcImg.rows - y, int(h * (1 + 2 * r)));
+			validRegion = cv::Rect(x, y, w, h);
+
+
+			return true;
+		}
+
+		bool BUAnalysis::InitGradeClassifier()
+		{
+			const std::string root = FileSystem::GetCurExePath() + "\\config\\";
+
+			std::string prototxt = root + "gc_fullimage_deploy.prototxt";
+			std::string caffemodel = root + "gc_fullimage_iter_5000.caffemodel";
+			bool is_gpu = false;
+
+			return ClassifierInitializer(m_pGradingClassifier, prototxt, caffemodel, is_gpu);
+		}
+
+		bool BUAnalysis::InitLessionClassifier()
+		{
+			const std::string root = FileSystem::GetCurExePath() + "\\config\\";
+
+			std::string prototxt = root + "lession_classify_trainval.prototxt";
+			std::string caffemodel = root + "lession_classify_iter_50000.caffemodel";
+			bool is_gpu = false;
+
+			return ClassifierInitializer(m_pLessionClassifier, prototxt, caffemodel, is_gpu);
+		}
+
+		bool BUAnalysis::ClassifierInitializer(DeepLearning* &pClassifier, 
+			const std::string& prototxt, const std::string& caffemodel, bool is_gpu)
+		{
+			if (!pClassifier)
+				pClassifier = new DeepLearning;
+
+			if (!pClassifier)
+			{
+				GLOG("ERROR: new pClassifier fail!\n");
+				return false;
+			}
+
+			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel))
+			{
+				return false;
+			}
+
+			pClassifier->SetBlasThreadNum(s_nNumBlasThread);
+			std::vector<int> meanvalue = {104, 117, 123};
+			float scale = 0.0078125f;
+
+			if (false == pClassifier->Init(prototxt, meanvalue, caffemodel, is_gpu))
+			{
+				GLOG("pClassifier->Init error!\n");
+				return false;
+			}
+
+			pClassifier->SetScale(scale);
+
+			return true;
+		}
+
+		ErrorCode BUAnalysis::ProcessResults(BUAnalysisResult& results)
+		{
+			if (results.nLessionsCount != 0 && results.nGrading == LG1a)
+			{
+				bool is_lession = false;
+				for (int i = 0; i < results.nLessionsCount; i++)
+				{
+					if (results.pLessionTypes[i] == LESSION
+						|| results.pLessionConfidence[i] > 0.5)
+					{
+						results.nGrading = LG_OTHER;
+						is_lession = true;
+						break;
+					}
+				}
+
+				if (is_lession == false)
+				{
+					results.nLessionsCount = 0;
+				}
+			}
+
+			if (results.nLessionsCount == 0 && results.nGrading == LG_OTHER)
+			{
+				results.nGrading = LG1a;
+			}
+
+			return SYY_NO_ERROR;
 		}
 
 	}

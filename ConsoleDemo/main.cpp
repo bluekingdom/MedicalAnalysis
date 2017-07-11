@@ -1,7 +1,9 @@
 #include <opencv2/opencv.hpp>
 #include <boost/filesystem.hpp>
+#include <fstream>
 
 #include "MedicalAnalysisSDK.h"
+
 
 using namespace SYY;
 using namespace SYY::MedicalAnalysis;
@@ -11,26 +13,61 @@ void test_BUAnalysis() {
 	ErrorCode res;
 
 	HANDLE handle;
-	res = InitBUAnalysis(handle, BUAnalysisMode::Crop_V2);
+	res = InitBUAnalysisWithMode(handle, BUAnalysisMode::Crop_V1 | BUAnalysisMode::DetectMore);
 	if (res != SYY_NO_ERROR)
 		return;
 
-	cv::Mat img = cv::imread("D:\\blue\\data\\»ÈœŸ∞©Õº∆¨\\4a¿‡\\±ˆ”Ó∂\\1.2.826.0.1.3680043.2.461.8663564.1117253524.jpg");
+	std::string fileName = "D:\\blue\\data\\»ÈœŸ∞©Õº∆¨\\5¿‡\\≈Àπ‚√Ù\\1.2.826.0.1.3680043.2.461.8921672.1968559331.jpg";
+
+	cv::Mat img = cv::imread(fileName);
+
+	Image image;
+	image.nWidth = img.cols;
+	image.nHeight = img.rows;
+	image.nChannels = img.channels();
+	image.pData = new char[image.nWidth * image.nHeight * image.nChannels];
+	memcpy(image.pData, img.data, img.step[0] * img.rows);
+
+	std::ifstream imgFile(fileName, std::ios::binary | std::ios::ate);
+	std::streamsize size = imgFile.tellg();
+	imgFile.seekg(0, std::ios::beg);
+
+	char* pFileData = new char[size];
+	imgFile.read(pFileData, size);
 
 	BUAnalysisResult result;
-	res = ExecuteBUAnalysis(handle, (char* )img.data, img.cols, img.rows, &result);
+	//res = ExecuteBUAnalysis(handle, (char* )img.data, img.cols, img.rows, &result);
+	res = ExecuteBUAnalysisFromFile(handle, &image, &result);
 	if (res != SYY_NO_ERROR)
 		return;
+
+	res = DrawResult2Image(&image, &result);
+	if (res != SYY_NO_ERROR)
+		return;
+
+	cv::Mat srcImg = cv::Mat(image.nHeight, image.nWidth,
+		image.nChannels == 3 ? CV_8UC3 : CV_8UC1, image.pData);
+
+	cv::imshow("srcImg", srcImg);
+	cv::waitKey();
 
 	cv::Rect cropRect( result.rCropRect.x, result.rCropRect.y, result.rCropRect.w, result.rCropRect.h );
 	cv::rectangle(img, cropRect, cv::Scalar(255, 255, 255), 2);
+	auto text = result.nGrading == 0 ? "1a" : "other";
+	cv::putText(img, text, cropRect.tl(), 1, 1, cv::Scalar(255, 255, 255));
 
 	for (int i = 0; i < result.nLessionsCount; i++)
 	{
+		//if (result.pLessionConfidence[i] < 0.3f) continue;
+
 		cv::Rect r(result.pLessionRects[i].x, result.pLessionRects[i].y, 
 			result.pLessionRects[i].w, result.pLessionRects[i].h);
 
 		cv::rectangle(img, r, cv::Scalar(255, 255, 255), 1);
+
+		cv::putText(img,
+			result.pLessionTypes[i] == SYY::MedicalAnalysis::NO_LESSION ? "non-lession" : "lession",
+			r.tl(), 1, 1, cv::Scalar(255, 255, 255) );
 	}
 
 	cv::imshow("img", img);

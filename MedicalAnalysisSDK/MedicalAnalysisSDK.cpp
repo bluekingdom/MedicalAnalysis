@@ -35,7 +35,7 @@ namespace SYY {
 
 		if (sg_pAlgorithmManager != nullptr)
 		{
-			GLOG("InitSDK Error: repeat call InitSDK!\n");
+			GLOG("Error: repeat call InitSDK!\n");
 			return SYY_SDK_REPEAT_INIT;
 		}
 
@@ -44,33 +44,45 @@ namespace SYY {
 		ErrorCode code;
 		if (!sg_pAlgorithmManager || SYY_NO_ERROR != (code = sg_pAlgorithmManager->Init()))
 		{
-			GLOG("InitSDK Error: algorithm manager init fail!\n");
+			GLOG("Error: algorithm manager init fail!\n");
 			return code;
 		}
 
-		GLOG("InitSDK Info: InitSDK success!\n");
+		GLOG("Info: InitSDK success!\n");
 		return SYY_NO_ERROR;
 	}
 
 	MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseSDK()
 	{
-		GLOG("ReleaseSDK Info: enter!\n");
+		GLOG("Info: enter!\n");
 
 		if (sg_pAlgorithmManager)
 		{
 			sg_pAlgorithmManager->Release();
 		}
+		else 
+		{
+			GLOG("Warn: Call InitSDK before ReleaseSDK!\n");
+		}
+		sg_pAlgorithmManager = nullptr;
 
-		GLOG("ReleaseSDK Info: success!\n");
+		GLOG("Info: exit!\n");
 		return SYY_NO_ERROR;
 	}
 
 	namespace MedicalAnalysis {
 
-		MEDICAL_ANALYSIS_SDK_API ErrorCode InitBUAnalysis(OUT HANDLE& hHandle, IN unsigned long nMode)
+		MEDICAL_ANALYSIS_SDK_API ErrorCode InitBUAnalysisWithMode(OUT HANDLE& hHandle, IN unsigned long nMode)
 		{
 			CHECK_ALGO_INIT();
 			return sg_pAlgorithmManager->InitBUAnalysis(hHandle, nMode);
+		}
+
+		MEDICAL_ANALYSIS_SDK_API ErrorCode InitBUAnalysis(OUT HANDLE& hHandle)
+		{
+			CHECK_ALGO_INIT();
+			//return sg_pAlgorithmManager->InitBUAnalysis(hHandle, DetectAccurate | Crop_V2);
+			return sg_pAlgorithmManager->InitBUAnalysis(hHandle, DetectMore | Crop_V1);
 		}
 
 		MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseBUAnalysis(INOUT HANDLE& hHandle)
@@ -85,6 +97,22 @@ namespace SYY {
 		{
 			CHECK_ALGO_INIT();
 			return sg_pAlgorithmManager->ExecuteBUAnalysis(hHandle, pImg, nImgWidth, nImgHeight, pResult);
+		}
+
+		MEDICAL_ANALYSIS_SDK_API ErrorCode ExecuteBUAnalysisFromFile(IN HANDLE hHandle, 
+			IN Image* pImage,
+			OUT BUAnalysisResult* pResult)
+		{
+			CHECK_ALGO_INIT();
+			return sg_pAlgorithmManager->ExecuteBUAnalysisFromFile(hHandle, pImage, pResult);
+		}
+
+		MEDICAL_ANALYSIS_SDK_API ErrorCode DrawResult2Image(
+			INOUT Image* pImage,
+			IN BUAnalysisResult* pResult)
+		{
+			CHECK_ALGO_INIT();
+			return sg_pAlgorithmManager->DrawResult2Image(pImage, pResult);
 		}
 
 	}

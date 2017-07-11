@@ -1,6 +1,8 @@
 #include "Utils.h"
 
 #include <boost/filesystem.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 namespace SYY {
 
@@ -42,8 +44,33 @@ namespace Common {
 		return r;
 	}
 
+	float IOU(const cv::Rect& a, const cv::Rect& b)
+	{
+		float i = (a & b).area();
+		float u = std::abs(a.area() + b.area() - i);
+
+		return i / u;
+	}
+
 }
 
+namespace Config {
 
+	std::string GetConfValue(const std::string& key)
+	{
+		std::string config_file = FileSystem::GetCurExePath() + "\\config\\sdk.cfg";
+		if (false == FileSystem::IsExists(config_file))
+		{
+			return " ";
+		}
+
+		using boost::property_tree::ptree;
+		ptree pt;
+		read_xml(config_file, pt);
+
+		return pt.get<std::string>(key);
+	}
+
+}
 
 }

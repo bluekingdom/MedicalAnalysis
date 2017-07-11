@@ -44,6 +44,14 @@ BEGIN_MESSAGE_MAP(CMFCDemoDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_INPAINT_V2, &CMFCDemoDlg::OnBnClickedButtonInpaintV2)
 	ON_BN_CLICKED(IDC_BUTTON_INPAINT_V3, &CMFCDemoDlg::OnBnClickedButtonInpaintV3)
 	ON_BN_CLICKED(IDC_BUTTON_INPAINT_V4, &CMFCDemoDlg::OnBnClickedButtonInpaintV4)
+	ON_BN_CLICKED(IDC_BUTTON_SAVE, &CMFCDemoDlg::OnBnClickedButtonSave)
+	ON_NOTIFY(TCN_SELCHANGE, IDC_TAB1, &CMFCDemoDlg::OnTcnSelchangeTab1)
+//	ON_NOTIFY(NM_THEMECHANGED, IDC_SCROLLBAR_THRESHOLD, &CMFCDemoDlg::OnThemechangedScrollbarThreshold)
+//ON_NOTIFY(TRBN_THUMBPOSCHANGING, IDC_SLIDER_THRESHOLD, &CMFCDemoDlg::OnThumbposchangingSliderThreshold)
+ON_WM_HSCROLL()
+ON_BN_CLICKED(IDC_BUTTON_ANALYSIS_2, &CMFCDemoDlg::OnBnClickedButtonAnalysis2)
+ON_BN_CLICKED(IDC_BUTTON_ANALYSIS_3, &CMFCDemoDlg::OnBnClickedButtonAnalysis3)
+ON_BN_CLICKED(IDC_BUTTON_ANALYSIS_4, &CMFCDemoDlg::OnBnClickedButtonAnalysis4)
 END_MESSAGE_MAP()
 
 
@@ -60,6 +68,12 @@ BOOL CMFCDemoDlg::OnInitDialog()
 
 	// TODO:  在此添加额外的初始化代码
 	GetInitImageRect();
+	SetAnalysisThreshold(0.1f);
+	m_bIsResultNeedRefresh = true;
+
+	CSliderCtrl *sliderCtrl = (CSliderCtrl*)GetDlgItem(IDC_SLIDER_THRESHOLD);
+	sliderCtrl->SetRange(0, 100, TRUE);
+	sliderCtrl->SetPos(m_fAnalysisThresHold * 100);
 
 	auto listbox = (CListBox*)GetDlgItem(IDC_LIST_FILELIST);
 	listbox->SetHorizontalExtent(1000);
@@ -72,8 +86,20 @@ BOOL CMFCDemoDlg::OnInitDialog()
 		MessageBox(msg);
 	}
 	else {
-		if (SYY_NO_ERROR != (code = InitBUAnalysis(m_hHandleBUAnalysis, BUAnalysisMode::Crop_V1))) {
-			sprintf_s(msg, "初始化B超分析算法失败! 错误码为%d", code);
+		if (SYY_NO_ERROR != (code = InitBUAnalysisWithMode(m_hHandleBUAnalysis, BUAnalysisMode::Crop_V1 | BUAnalysisMode::DetectMore))) {
+			sprintf_s(msg, "初始化B超分析算法1失败! 错误码为%d", code);
+			MessageBox(msg);
+		}
+		if (SYY_NO_ERROR != (code = InitBUAnalysisWithMode(m_hHandleBUAnalysis2, BUAnalysisMode::Crop_V2 | BUAnalysisMode::DetectMore))) {
+			sprintf_s(msg, "初始化B超分析算法2失败! 错误码为%d", code);
+			MessageBox(msg);
+		}
+		if (SYY_NO_ERROR != (code = InitBUAnalysisWithMode(m_hHandleBUAnalysis3, BUAnalysisMode::Crop_V1 | BUAnalysisMode::DetectAccurate))) {
+			sprintf_s(msg, "初始化B超分析算法3失败! 错误码为%d", code);
+			MessageBox(msg);
+		}
+		if (SYY_NO_ERROR != (code = InitBUAnalysisWithMode(m_hHandleBUAnalysis4, BUAnalysisMode::Crop_V2 | BUAnalysisMode::DetectAccurate))) {
+			sprintf_s(msg, "初始化B超分析算法4失败! 错误码为%d", code);
 			MessageBox(msg);
 		}
 		if (SYY_NO_ERROR != (code = InitInpaint(m_hHandleInpaintPM, InpaintMode::PatchMatch))) {
@@ -116,8 +142,7 @@ void CMFCDemoDlg::OnPaint()
 	{
 		CDialogEx::OnPaint();
 
-		if (false == m_mCurImg.empty())
-			ShowImg(m_mCurImg);
+		DrawAnalysisResults();
 	}
 }
 
@@ -127,8 +152,6 @@ HCURSOR CMFCDemoDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
 }
-
-
 
 //void CMFCDemoDlg::OnLbnSelchangeList1()
 //{
@@ -207,23 +230,9 @@ void CMFCDemoDlg::OnBnClickedButtonAnalysis()
 		return;
 	}
 
-	cv::Rect cropRect(result.rCropRect.x, result.rCropRect.y, result.rCropRect.w, result.rCropRect.h);
-	cv::rectangle(img, cropRect, cv::Scalar(255, 255, 255), 4);
+	m_bIsResultNeedRefresh = false;
 
-	std::stringstream ss;
-
-	for (int i = 0; i < result.nLessionsCount; i++)
-	{
-		auto r = result.pLessionRects[i];
-		cv::Rect rect(r.x, r.y, r.w, r.h);
-		cv::rectangle(img, rect, cv::Scalar(255, 0, 255), 1);
-		ss.str("");
-		ss.precision(3);
-		ss << result.pLessionConfidence[i];
-		cv::putText(img, ss.str(), (rect.br() + rect.tl()) / 2, 1, 2, cv::Scalar(255, 255, 255), 1);
-	}
-
-	ShowImg(img);
+	DrawAnalysisResults();
 }
 
 void CMFCDemoDlg::OnSelchangeListFilelist()
@@ -233,6 +242,8 @@ void CMFCDemoDlg::OnSelchangeListFilelist()
 	m_nCurFileIdx = listbox->GetCurSel();
 
 	ShowImgFromFileIdx(m_nCurFileIdx);
+
+	m_bIsResultNeedRefresh = true;
 }
 
 void CMFCDemoDlg::ResetAll()
@@ -512,7 +523,9 @@ void CMFCDemoDlg::OnBnClickedButtonInpaint()
 	}
 
 	Inpaint_v1();
+	m_bIsResultNeedRefresh = true;
 
+	ShowImg(m_mCurImg);
 }
 
 
@@ -540,8 +553,6 @@ void CMFCDemoDlg::Inpaint_v1()
 	m_mCurImg = cv::Mat(inpaint.nHeight, inpaint.nWidth, inpaint.nChannels == 3 ? CV_8UC3 : CV_8UC1, inpaint.pData).clone();
 	m_mOriImg = m_mCurImg.clone();
 	m_mMaskImg = cv::Mat::zeros(m_mMaskImg.size(), m_mMaskImg.type());
-
-	ShowImg(m_mCurImg);
 }
 
 void CMFCDemoDlg::Inpaint_v2()
@@ -564,7 +575,6 @@ void CMFCDemoDlg::Inpaint_v2()
 	m_mOriImg = m_mCurImg.clone();
 	m_mMaskImg = cv::Mat::zeros(m_mMaskImg.size(), m_mMaskImg.type());
 
-	ShowImg(m_mCurImg);
 
 
 }
@@ -580,6 +590,10 @@ void CMFCDemoDlg::OnBnClickedButtonInpaintV2()
 	}
 
 	Inpaint_v2();
+
+	m_bIsResultNeedRefresh = true;
+
+	ShowImg(m_mCurImg);
 }
 
 
@@ -594,6 +608,9 @@ void CMFCDemoDlg::OnBnClickedButtonInpaintV3()
 
 	Inpaint_v3();
 
+	m_bIsResultNeedRefresh = true;
+
+	ShowImg(m_mCurImg);
 }
 
 void CMFCDemoDlg::Inpaint_v3()
@@ -608,7 +625,6 @@ void CMFCDemoDlg::Inpaint_v3()
 	m_mOriImg = inpaintImg.clone();
 	m_mMaskImg = cv::Mat::zeros(m_mMaskImg.size(), m_mMaskImg.type());
 
-	ShowImg(inpaintImg);
 }
 
 void CMFCDemoDlg::Inpaint_v4()
@@ -623,7 +639,6 @@ void CMFCDemoDlg::Inpaint_v4()
 	m_mOriImg = inpaintImg.clone();
 	m_mMaskImg = cv::Mat::zeros(m_mMaskImg.size(), m_mMaskImg.type());
 
-	ShowImg(inpaintImg);
 }
 
 
@@ -637,9 +652,13 @@ void CMFCDemoDlg::OnBnClickedButtonInpaintV4()
 	}
 
 	Inpaint_v4();
+
+	m_bIsResultNeedRefresh = true;
+
+	ShowImg(m_mCurImg);
 }
 
-void CMFCDemoDlg::SaveCurImg()
+void CMFCDemoDlg::SaveCurImg(const std::string& save_path)
 {
 	if (m_mCurImg.empty())
 	{
@@ -647,6 +666,224 @@ void CMFCDemoDlg::SaveCurImg()
 	}
 	auto file = m_vFiles[m_nCurFileIdx];
 
-	cv::imwrite(file, m_mCurImg);
+	auto filename = file.substr(file.find_last_of('\\'));
+
+	auto filepath = save_path + filename;
+
+	auto resImg = DrawAnalysisResults();
+
+	cv::imwrite(filepath, resImg);
 }
 
+void CMFCDemoDlg::OnBnClickedButtonSave()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	char szPath[MAX_PATH];     //存放选择的目录路径
+
+	BROWSEINFO bi;
+	bi.hwndOwner = m_hWnd;
+	bi.pidlRoot = NULL;
+	bi.pszDisplayName = szPath;
+	bi.lpszTitle = "请选择需要打开的目录：";
+	bi.ulFlags = 0;
+	bi.lpfn = NULL;
+	bi.lParam = 0;
+	bi.iImage = 0;
+	//弹出选择目录对话框
+	LPITEMIDLIST lp = SHBrowseForFolder(&bi);
+	SHGetPathFromIDList(lp, szPath);
+
+	CString folderRootPath = szPath;
+
+	SaveCurImg(folderRootPath.GetString());
+}
+
+
+void CMFCDemoDlg::OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	// TODO:  在此添加控件通知处理程序代码
+	*pResult = 0;
+}
+
+
+//void CMFCDemoDlg::OnThemechangedScrollbarThreshold(NMHDR *pNMHDR, LRESULT *pResult)
+//{
+//	// 该功能要求使用 Windows XP 或更高版本。
+//	// 符号 _WIN32_WINNT 必须 >= 0x0501。
+//	// TODO:  在此添加控件通知处理程序代码
+//	*pResult = 0;
+//}
+
+
+//void CMFCDemoDlg::OnThumbposchangingSliderThreshold(NMHDR *pNMHDR, LRESULT *pResult)
+//{
+//	// 此功能要求 Windows Vista 或更高版本。
+//	// _WIN32_WINNT 符号必须 >= 0x0600。
+//	NMTRBTHUMBPOSCHANGING *pNMTPC = reinterpret_cast<NMTRBTHUMBPOSCHANGING *>(pNMHDR);
+//	// TODO:  在此添加控件通知处理程序代码
+//	*pResult = 0;
+//}
+
+
+void CMFCDemoDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	// TODO:  在此添加消息处理程序代码和/或调用默认值
+	CSliderCtrl* sliderCtrl = (CSliderCtrl*)GetDlgItem(IDC_SLIDER_THRESHOLD);
+	int value = sliderCtrl->GetPos();
+
+	value = std::max(0, value);
+	value = std::min(value, 100);
+
+	float fValue = (float)value / 100.f;
+
+	SetAnalysisThreshold(fValue);
+
+	CDialogEx::OnHScroll(nSBCode, nPos, pScrollBar);
+}
+
+void CMFCDemoDlg::SetAnalysisThreshold(float thres)
+{
+	m_fAnalysisThresHold = thres;
+
+	CString text;
+	text.Format("%1.3f", m_fAnalysisThresHold);
+	GetDlgItem(IDC_TEXT_THRESHOLD)->SetWindowTextA(text);
+
+	if (m_mCurImg.empty())
+	{
+
+		return;
+	}
+
+	DrawAnalysisResults();
+}
+
+cv::Mat CMFCDemoDlg::DrawAnalysisResults()
+{
+	if (m_mCurImg.empty())
+	{
+		return m_mCurImg;
+	}
+
+	auto img = m_mCurImg.clone();
+
+	if (false == m_bIsResultNeedRefresh)
+	{
+		auto result = m_BUresult;
+
+		cv::Rect cropRect(result.rCropRect.x, result.rCropRect.y, result.rCropRect.w, result.rCropRect.h);
+
+		cv::rectangle(img, cropRect, cv::Scalar(255, 255, 255), 1);
+		auto text = result.nGrading == 0 ? "1a" : "other";
+		cv::putText(img, text, cropRect.tl(), 1, 1, cv::Scalar(255, 255, 255));
+
+		std::stringstream ss;
+
+		for (int i = 0; i < result.nLessionsCount; i++)
+		{
+			if (result.pLessionConfidence[i] < m_fAnalysisThresHold)
+				continue;
+
+			auto r = result.pLessionRects[i];
+			cv::Rect rect(r.x, r.y, r.w, r.h);
+			cv::rectangle(img, rect, cv::Scalar(0, 0, 255), 2);
+			ss.str("");
+			ss.precision(3);
+			ss << result.pLessionConfidence[i];
+			cv::putText(img, ss.str(), (rect.br() + rect.tl()) / 2, 1, 2, cv::Scalar(255, 255, 255), 1);
+		}
+	}
+
+	ShowImg(img);
+
+	return img;
+}
+
+
+void CMFCDemoDlg::OnBnClickedButtonAnalysis2()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	if (m_mCurImg.empty())
+	{
+		MessageBox("请先选择图片!");
+		return;
+	}
+
+	auto img = m_mCurImg;
+
+	auto& result = m_BUresult;
+
+	ErrorCode code;
+	bool bIsCrop = true;
+	if (SYY_NO_ERROR != (code =
+		ExecuteBUAnalysis(m_hHandleBUAnalysis2, (char*)img.data, img.cols, img.rows, &result)))
+	{
+		char msg[256];
+		sprintf_s(msg, "b超分析算法失败！ 错误码为： %d", code);
+		MessageBox(msg);
+		return;
+	}
+
+	m_bIsResultNeedRefresh = false;
+
+	DrawAnalysisResults();
+}
+
+
+void CMFCDemoDlg::OnBnClickedButtonAnalysis3()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	if (m_mCurImg.empty())
+	{
+		MessageBox("请先选择图片!");
+		return;
+	}
+
+	auto img = m_mCurImg;
+
+	auto& result = m_BUresult;
+
+	ErrorCode code;
+	bool bIsCrop = true;
+	if (SYY_NO_ERROR != (code =
+		ExecuteBUAnalysis(m_hHandleBUAnalysis3, (char*)img.data, img.cols, img.rows, &result)))
+	{
+		char msg[256];
+		sprintf_s(msg, "b超分析算法失败！ 错误码为： %d", code);
+		MessageBox(msg);
+		return;
+	}
+
+	m_bIsResultNeedRefresh = false;
+
+	DrawAnalysisResults();
+}
+
+void CMFCDemoDlg::OnBnClickedButtonAnalysis4()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	if (m_mCurImg.empty())
+	{
+		MessageBox("请先选择图片!");
+		return;
+	}
+
+	auto img = m_mCurImg;
+
+	auto& result = m_BUresult;
+
+	ErrorCode code;
+	bool bIsCrop = true;
+	if (SYY_NO_ERROR != (code =
+		ExecuteBUAnalysis(m_hHandleBUAnalysis4, (char*)img.data, img.cols, img.rows, &result)))
+	{
+		char msg[256];
+		sprintf_s(msg, "b超分析算法失败！ 错误码为： %d", code);
+		MessageBox(msg);
+		return;
+	}
+
+	m_bIsResultNeedRefresh = false;
+
+	DrawAnalysisResults();
+}

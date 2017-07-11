@@ -17,6 +17,7 @@
 #include "Algorithm/Common/glog.h"
 #include "Algorithm/B-scanUltrasonography/BUAnalysis.h"
 #include "Algorithm/Inpaint/InpaintManager.h"
+#include "Algorithm/Common/Utils.h"
 
 namespace SYY {
 	using namespace MedicalAnalysis;
@@ -73,6 +74,27 @@ namespace SYY {
 		}
 
 		return pBUAnalysis->Analysis(cv::Mat(nImgHeight, nImgWidth, CV_8UC3, pImg), *pResult);
+	}
+
+	SYY::ErrorCode AlgorithmManager::ExecuteBUAnalysisFromFile(HANDLE hHandle, 
+		Image* pImage, MedicalAnalysis::BUAnalysisResult* pResult)
+	{
+		BUAnalysis* pBUAnalysis = reinterpret_cast<BUAnalysis*>(hHandle);
+		if (pBUAnalysis == nullptr)
+		{
+			GLOG("ReleaseBUAnalysis Error: hHandle is invalid!\n");
+			return SYY_SYS_ERROR;
+		}
+
+		cv::Mat srcImg = cv::Mat(pImage->nHeight, pImage->nWidth, 
+			pImage->nChannels == 3 ? CV_8UC3 : CV_8UC1, pImage->pData);
+
+		ErrorCode res = pBUAnalysis->Analysis(srcImg, *pResult);
+
+		if (res != SYY_NO_ERROR)
+			return res;
+
+		return pBUAnalysis->ProcessResults(*pResult);
 	}
 
 	SYY::ErrorCode AlgorithmManager::ExecuteInpaint(HANDLE hHandle, 
@@ -133,6 +155,31 @@ namespace SYY {
 		}
 
 		pInpaint->Release();
+
+		return SYY_NO_ERROR;
+	}
+
+	SYY::ErrorCode AlgorithmManager::DrawResult2Image(
+		Image* pImage,
+		MedicalAnalysis::BUAnalysisResult* pResult)
+	{
+		if (pImage == nullptr || pImage->pData == 0)
+		{
+			GLOG("Error: pImage or pImage->pData is nullptr!\n");
+			return SYY_SYS_ERROR;
+		}
+
+		cv::Mat srcImg = cv::Mat(pImage->nHeight, pImage->nWidth, 
+			pImage->nChannels == 3 ? CV_8UC3 : CV_8UC1, pImage->pData);		
+
+		//cv::imshow("srcImg", srcImg);
+		//cv::waitKey();
+
+		for (int i = 0; i < pResult->nLessionsCount; i++)
+		{
+			auto rect = Common::Rect2CVRect(pResult->pLessionRects[i]);
+			cv::rectangle(srcImg, rect, cv::Scalar(255, 255, 255));
+		}
 
 		return SYY_NO_ERROR;
 	}

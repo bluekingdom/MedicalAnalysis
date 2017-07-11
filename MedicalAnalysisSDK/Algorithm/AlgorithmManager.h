@@ -32,12 +32,20 @@ namespace SYY {
 			char* pImg, int nImgWidth, int nImgHeight,
 			MedicalAnalysis::BUAnalysisResult* pResult);
 
+		ErrorCode ExecuteBUAnalysisFromFile(HANDLE hHandle,
+			Image* pImage,
+			MedicalAnalysis::BUAnalysisResult* pResult);
+
 		ErrorCode InitInpaint(HANDLE& hHandle, unsigned long nMode);
 		ErrorCode ReleaseInpaint(HANDLE hHandle);
 
 		ErrorCode ExecuteInpaint(HANDLE hHandle, 
 			Image srcImg, Image maskImg, 
 			Image& inpaintImg);
+
+		ErrorCode DrawResult2Image(
+			INOUT Image* pImage,
+			IN MedicalAnalysis::BUAnalysisResult* pResult);	
 
 	private:
 

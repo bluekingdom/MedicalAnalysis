@@ -49,13 +49,15 @@ protected:
 	bool AdjustInputMatSizeAndRect(const cv::Mat& src, cv::Mat&dst, CRect& rect);
 	void MatToCImage(const cv::Mat& mat, CImage& cImage);
 	void ShowImgFromFileIdx(int idx);
-	void SaveCurImg();
+	void SaveCurImg(const std::string& save_path);
 	void Redraw();
 	void ScreenPt2ImgPt(CPoint snPt, cv::Point& imgPt);
 	void Inpaint_v1();
 	void Inpaint_v2();
 	void Inpaint_v3();
 	void Inpaint_v4();
+	void SetAnalysisThreshold(float thres);
+	cv::Mat DrawAnalysisResults();
 
 private:
 	std::vector<std::string> m_vFiles;
@@ -68,10 +70,17 @@ private:
 	cv::Size m_resizeImgSize;
 
 	SYY::MedicalAnalysis::BUAnalysisResult m_BUresult;
+	bool m_bIsResultNeedRefresh;
+
 	SYY::HANDLE m_hHandleBUAnalysis;
+	SYY::HANDLE m_hHandleBUAnalysis2;
+	SYY::HANDLE m_hHandleBUAnalysis3;
+	SYY::HANDLE m_hHandleBUAnalysis4;
 	SYY::HANDLE m_hHandleInpaintPM;
 	SYY::HANDLE m_hHandleInpaintCriminisi;
 	bool m_bIsLButtonDown;
+
+	float m_fAnalysisThresHold;
 
 public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
@@ -82,4 +91,12 @@ public:
 	afx_msg void OnBnClickedButtonInpaintV2();
 	afx_msg void OnBnClickedButtonInpaintV3();
 	afx_msg void OnBnClickedButtonInpaintV4();
+	afx_msg void OnBnClickedButtonSave();
+	afx_msg void OnTcnSelchangeTab1(NMHDR *pNMHDR, LRESULT *pResult);
+//	afx_msg void OnThemechangedScrollbarThreshold(NMHDR *pNMHDR, LRESULT *pResult);
+//	afx_msg void OnThumbposchangingSliderThreshold(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnBnClickedButtonAnalysis2();
+	afx_msg void OnBnClickedButtonAnalysis3();
+	afx_msg void OnBnClickedButtonAnalysis4();
 };

@@ -17,9 +17,9 @@
 #include "ErrorCode.h"
 
 #ifdef MEDICAL_ANALYSIS_SDK_EXPORTS
-#define MEDICAL_ANALYSIS_SDK_API __declspec(dllexport) 
+#define MEDICAL_ANALYSIS_SDK_API extern "C" __declspec(dllexport) 
 #else
-#define MEDICAL_ANALYSIS_SDK_API __declspec(dllimport) 
+#define MEDICAL_ANALYSIS_SDK_API extern "C" __declspec(dllimport) 
 #endif
 
 #ifndef IN
@@ -84,26 +84,55 @@ namespace Inpainting{
 
 namespace MedicalAnalysis {
 
+	enum LessionGrading
+	{
+		LG1a = 0,
+		LG_OTHER = 1,
+		//LG4a = 2,
+		//LG4b = 3,
+		//LG4c = 4,
+		//LG5 = 5,
+		//LG6 = 6,
+	};
+	enum LessionType
+	{
+		NO_LESSION = 0,
+		LESSION = 1,
+	};
+
 	struct BUAnalysisResult {
-		BUAnalysisResult() : pLessionRects(nullptr), nLessionsCount(0) {}
+		BUAnalysisResult() : nLessionsCount(0) {}
 
-		Rect rCropRect;				// 有效图片区域
+		const static int MAX_LEN = 128;
 
-		int nLessionsCount;			// 病灶数量
-		Rect* pLessionRects;		// 病灶区域
-		float* pLessionConfidence;	// 病灶置信值
+		Rect rCropRect;					// 有效图片区域
+
+		LessionGrading nGrading;		// 病况分级
+
+		int nLessionsCount;				// 病灶数量
+		Rect pLessionRects[MAX_LEN];		// 病灶区域
+		float pLessionConfidence[MAX_LEN];	// 病灶置信值
+		LessionType pLessionTypes[MAX_LEN];	// 病灶类型
 	};
 
 	enum BUAnalysisMode{
 		None = 0x1,
 		Crop_V1 = 0x2,
 		Crop_V2 = 0x4,
+		Crop_V3 = 0x8,
+		DetectMore = 0x10,
+		DetectAccurate = 0x20,
 	};
 
 
-	MEDICAL_ANALYSIS_SDK_API ErrorCode InitBUAnalysis(
+
+	MEDICAL_ANALYSIS_SDK_API ErrorCode InitBUAnalysisWithMode(
 		OUT HANDLE& hHandle,
 		IN unsigned long nMode
+		);
+
+	MEDICAL_ANALYSIS_SDK_API ErrorCode InitBUAnalysis(
+		OUT HANDLE& hHandle
 		);
 
 	MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseBUAnalysis(
@@ -117,5 +146,17 @@ namespace MedicalAnalysis {
 		IN int nImgHeight,
 		OUT BUAnalysisResult* pResult
 		);
+
+	MEDICAL_ANALYSIS_SDK_API ErrorCode ExecuteBUAnalysisFromFile(
+		IN HANDLE hHandle, 
+		IN Image* pImage, 
+		OUT BUAnalysisResult* pResult
+		);
+
+	MEDICAL_ANALYSIS_SDK_API ErrorCode DrawResult2Image(
+		INOUT Image* pImage,
+		IN BUAnalysisResult* pResult
+		);
+
 }
 }
