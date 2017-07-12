@@ -68,7 +68,7 @@ namespace Config {
 		ptree pt;
 		read_xml(config_file, pt);
 
-		return pt.get<std::string>(key);
+		return pt.get<std::string>("config." + key);
 	}
 
 }

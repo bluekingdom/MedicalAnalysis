@@ -15,4 +15,5 @@ ProcessRectTxt/testImgs
 3rdparty/boost_1_64_0/lib_backup
 ConsoleDemo/logs
 *.jpg
-WindowsFormsAppTest/obj
+obj
+bin
