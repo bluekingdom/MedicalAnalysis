@@ -537,7 +537,7 @@ namespace SYY {
 			//std::string caffemodel = root + "custom_data_vgg16_faster_rcnn_final.caffemodel";
 			const std::string config_file = root + "custom_data_config.json";
 
-			int gpu_idx = -1;
+			int gpu_idx = s_bIsUseGPU ? 0 : -1;
 
 			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel) || false == CheckFile(config_file))
 			{
@@ -591,7 +591,7 @@ namespace SYY {
 			std::string caffemodel = root + Config::GetConfValue("analysis_more.caffemodel");
 			//std::string caffemodel = root + "20170621-b-scan_iter_59000.caffemodel";
 
-			bool is_gpu= false;
+			bool is_gpu= s_bIsUseGPU;
 
 			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel)) 
 			{
@@ -622,7 +622,7 @@ namespace SYY {
 			std::string prototxt = root + Config::GetConfValue("analysis_accurate.prototxt");
 			std::string caffemodel = root + Config::GetConfValue("analysis_accurate.caffemodel");
 
-			bool is_gpu= false;
+			bool is_gpu = s_bIsUseGPU;
 
 			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel))
 			{
@@ -759,7 +759,7 @@ namespace SYY {
 			auto caffemodel = root + Config::GetConfValue("crop_v2.caffemodel");
 			auto config_file = root + Config::GetConfValue("crop_v2.config");
 
-			int gpu_idx = -1;
+			int gpu_idx = s_bIsUseGPU ? 0 : -1;
 
 			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel))
 			{
@@ -784,7 +784,7 @@ namespace SYY {
 			std::string prototxt = root + "imgBox-ssd-deploy.prototxt";
 			std::string caffemodel = root + "imgBox_iter_38000.caffemodel";
 
-			bool is_gpu= false;
+			bool is_gpu = s_bIsUseGPU;
 
 			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel))
 			{
@@ -850,7 +850,7 @@ namespace SYY {
 
 			std::string prototxt = root + "gc_fullimage_deploy.prototxt";
 			std::string caffemodel = root + "gc_fullimage_iter_5000.caffemodel";
-			bool is_gpu = false;
+			bool is_gpu = s_bIsUseGPU;
 
 			return ClassifierInitializer(m_pGradingClassifier, prototxt, caffemodel, is_gpu);
 		}
@@ -861,7 +861,7 @@ namespace SYY {
 
 			std::string prototxt = root + "lession_classify_trainval.prototxt";
 			std::string caffemodel = root + "lession_classify_iter_50000.caffemodel";
-			bool is_gpu = false;
+			bool is_gpu = s_bIsUseGPU;
 
 			return ClassifierInitializer(m_pLessionClassifier, prototxt, caffemodel, is_gpu);
 		}

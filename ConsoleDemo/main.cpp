@@ -17,7 +17,7 @@ void test_BUAnalysis() {
 	if (res != SYY_NO_ERROR)
 		return;
 
-	std::string fileName = "D:\\blue\\data\\»ÈœŸ∞©Õº∆¨\\5¿‡\\≈Àπ‚√Ù\\1.2.826.0.1.3680043.2.461.8921672.1968559331.jpg";
+	std::string fileName = "E:\\data\\»ÈœŸ∞©Õº∆¨\\5¿‡\\≈Àπ‚√Ù\\1.2.826.0.1.3680043.2.461.8921672.1968559331.jpg";
 
 	cv::Mat img = cv::imread(fileName);
 
