@@ -9,7 +9,8 @@ using namespace SYY;
 using namespace SYY::MedicalAnalysis;
 using namespace SYY::Inpainting;
 
-void test_BUAnalysis() {
+void test_BUAnalysis() 
+{
 	ErrorCode res;
 
 	HANDLE handle;
@@ -56,6 +57,8 @@ void test_BUAnalysis() {
 	auto text = result.nGrading == 0 ? "1a" : "other";
 	cv::putText(img, text, cropRect.tl(), 1, 1, cv::Scalar(255, 255, 255));
 
+	std::stringstream ss;
+
 	for (int i = 0; i < result.nLessionsCount; i++)
 	{
 		//if (result.pLessionConfidence[i] < 0.3f) continue;
@@ -68,6 +71,11 @@ void test_BUAnalysis() {
 		cv::putText(img,
 			result.pLessionTypes[i] == SYY::MedicalAnalysis::NO_LESSION ? "non-lession" : "lession",
 			r.tl(), 1, 1, cv::Scalar(255, 255, 255) );
+
+		ss << i << ".jpg";
+
+		cv::imwrite(ss.str(), img(r));
+
 	}
 
 	cv::imshow("img", img);
@@ -105,7 +113,8 @@ void test_inpaint() {
 	cv::waitKey();
 }
 
-void main() {
+void main() 
+{
 	ErrorCode res;
 	
 	res = InitSDK();

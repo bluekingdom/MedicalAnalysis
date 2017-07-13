@@ -29,22 +29,22 @@
         private void InitializeComponent()
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label_crop_v2_prototxt = new System.Windows.Forms.Label();
-            this.button_crop_v2_prototxt = new System.Windows.Forms.Button();
-            this.button_crop_v2_caffemodel = new System.Windows.Forms.Button();
-            this.label_crop_v2_caffemodel = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.button_analysis_prototxt = new System.Windows.Forms.Button();
-            this.label_analysis_prototxt = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.label_analysis_caffemodel = new System.Windows.Forms.Label();
-            this.button_analysis_caffemodel = new System.Windows.Forms.Button();
             this.button_crop_v2_config = new System.Windows.Forms.Button();
             this.label_crop_v2_config = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
+            this.button_crop_v2_caffemodel = new System.Windows.Forms.Button();
+            this.label_crop_v2_caffemodel = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.button_crop_v2_prototxt = new System.Windows.Forms.Button();
+            this.label_crop_v2_prototxt = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.label_analysis_caffemodel = new System.Windows.Forms.Label();
+            this.button_analysis_caffemodel = new System.Windows.Forms.Button();
+            this.label_analysis_prototxt = new System.Windows.Forms.Label();
+            this.button_analysis_prototxt = new System.Windows.Forms.Button();
+            this.label8 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label_classify_caffemodel = new System.Windows.Forms.Label();
             this.button_classify_caffemodel = new System.Windows.Forms.Button();
@@ -84,33 +84,33 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Crop 参数";
             // 
-            // label1
+            // button_crop_v2_config
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(19, 22);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(101, 12);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "模型文件prototxt";
+            this.button_crop_v2_config.Location = new System.Drawing.Point(464, 89);
+            this.button_crop_v2_config.Name = "button_crop_v2_config";
+            this.button_crop_v2_config.Size = new System.Drawing.Size(75, 23);
+            this.button_crop_v2_config.TabIndex = 8;
+            this.button_crop_v2_config.Text = "设置";
+            this.button_crop_v2_config.UseVisualStyleBackColor = true;
+            this.button_crop_v2_config.Click += new System.EventHandler(this.button_crop_v2_config_Click);
             // 
-            // label_crop_v2_prototxt
+            // label_crop_v2_config
             // 
-            this.label_crop_v2_prototxt.AutoSize = true;
-            this.label_crop_v2_prototxt.Location = new System.Drawing.Point(137, 22);
-            this.label_crop_v2_prototxt.Name = "label_crop_v2_prototxt";
-            this.label_crop_v2_prototxt.Size = new System.Drawing.Size(53, 12);
-            this.label_crop_v2_prototxt.TabIndex = 1;
-            this.label_crop_v2_prototxt.Text = "prototxt";
+            this.label_crop_v2_config.AutoSize = true;
+            this.label_crop_v2_config.Location = new System.Drawing.Point(135, 94);
+            this.label_crop_v2_config.Name = "label_crop_v2_config";
+            this.label_crop_v2_config.Size = new System.Drawing.Size(41, 12);
+            this.label_crop_v2_config.TabIndex = 7;
+            this.label_crop_v2_config.Text = "config";
             // 
-            // button_crop_v2_prototxt
+            // label4
             // 
-            this.button_crop_v2_prototxt.Location = new System.Drawing.Point(466, 17);
-            this.button_crop_v2_prototxt.Name = "button_crop_v2_prototxt";
-            this.button_crop_v2_prototxt.Size = new System.Drawing.Size(75, 23);
-            this.button_crop_v2_prototxt.TabIndex = 2;
-            this.button_crop_v2_prototxt.Text = "设置";
-            this.button_crop_v2_prototxt.UseVisualStyleBackColor = true;
-            this.button_crop_v2_prototxt.Click += new System.EventHandler(this.button1_Click);
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(17, 94);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(89, 12);
+            this.label4.TabIndex = 6;
+            this.label4.Text = "模型配置config";
             // 
             // button_crop_v2_caffemodel
             // 
@@ -140,6 +140,34 @@
             this.label3.TabIndex = 3;
             this.label3.Text = "模型权重caffemodel";
             // 
+            // button_crop_v2_prototxt
+            // 
+            this.button_crop_v2_prototxt.Location = new System.Drawing.Point(466, 17);
+            this.button_crop_v2_prototxt.Name = "button_crop_v2_prototxt";
+            this.button_crop_v2_prototxt.Size = new System.Drawing.Size(75, 23);
+            this.button_crop_v2_prototxt.TabIndex = 2;
+            this.button_crop_v2_prototxt.Text = "设置";
+            this.button_crop_v2_prototxt.UseVisualStyleBackColor = true;
+            this.button_crop_v2_prototxt.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // label_crop_v2_prototxt
+            // 
+            this.label_crop_v2_prototxt.AutoSize = true;
+            this.label_crop_v2_prototxt.Location = new System.Drawing.Point(137, 22);
+            this.label_crop_v2_prototxt.Name = "label_crop_v2_prototxt";
+            this.label_crop_v2_prototxt.Size = new System.Drawing.Size(53, 12);
+            this.label_crop_v2_prototxt.TabIndex = 1;
+            this.label_crop_v2_prototxt.Text = "prototxt";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(19, 22);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(101, 12);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "模型文件prototxt";
+            // 
             // groupBox3
             // 
             this.groupBox3.Controls.Add(this.label5);
@@ -155,33 +183,14 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Analysis 参数";
             // 
-            // button_analysis_prototxt
+            // label5
             // 
-            this.button_analysis_prototxt.Location = new System.Drawing.Point(465, 24);
-            this.button_analysis_prototxt.Name = "button_analysis_prototxt";
-            this.button_analysis_prototxt.Size = new System.Drawing.Size(75, 23);
-            this.button_analysis_prototxt.TabIndex = 7;
-            this.button_analysis_prototxt.Text = "设置";
-            this.button_analysis_prototxt.UseVisualStyleBackColor = true;
-            this.button_analysis_prototxt.Click += new System.EventHandler(this.button_analysis_prototxt_Click);
-            // 
-            // label_analysis_prototxt
-            // 
-            this.label_analysis_prototxt.AutoSize = true;
-            this.label_analysis_prototxt.Location = new System.Drawing.Point(137, 28);
-            this.label_analysis_prototxt.Name = "label_analysis_prototxt";
-            this.label_analysis_prototxt.Size = new System.Drawing.Size(53, 12);
-            this.label_analysis_prototxt.TabIndex = 8;
-            this.label_analysis_prototxt.Text = "prototxt";
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(19, 28);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(101, 12);
-            this.label8.TabIndex = 7;
-            this.label8.Text = "模型文件prototxt";
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(19, 63);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(113, 12);
+            this.label5.TabIndex = 9;
+            this.label5.Text = "模型权重caffemodel";
             // 
             // label_analysis_caffemodel
             // 
@@ -202,42 +211,33 @@
             this.button_analysis_caffemodel.UseVisualStyleBackColor = true;
             this.button_analysis_caffemodel.Click += new System.EventHandler(this.button_analysis_caffemodel_Click);
             // 
-            // button_crop_v2_config
+            // label_analysis_prototxt
             // 
-            this.button_crop_v2_config.Location = new System.Drawing.Point(464, 89);
-            this.button_crop_v2_config.Name = "button_crop_v2_config";
-            this.button_crop_v2_config.Size = new System.Drawing.Size(75, 23);
-            this.button_crop_v2_config.TabIndex = 8;
-            this.button_crop_v2_config.Text = "设置";
-            this.button_crop_v2_config.UseVisualStyleBackColor = true;
-            this.button_crop_v2_config.Click += new System.EventHandler(this.button_crop_v2_config_Click);
+            this.label_analysis_prototxt.AutoSize = true;
+            this.label_analysis_prototxt.Location = new System.Drawing.Point(137, 28);
+            this.label_analysis_prototxt.Name = "label_analysis_prototxt";
+            this.label_analysis_prototxt.Size = new System.Drawing.Size(53, 12);
+            this.label_analysis_prototxt.TabIndex = 8;
+            this.label_analysis_prototxt.Text = "prototxt";
             // 
-            // label_crop_v2_config
+            // button_analysis_prototxt
             // 
-            this.label_crop_v2_config.AutoSize = true;
-            this.label_crop_v2_config.Location = new System.Drawing.Point(135, 94);
-            this.label_crop_v2_config.Name = "label_crop_v2_config";
-            this.label_crop_v2_config.Size = new System.Drawing.Size(41, 12);
-            this.label_crop_v2_config.TabIndex = 7;
-            this.label_crop_v2_config.Text = "config";
+            this.button_analysis_prototxt.Location = new System.Drawing.Point(465, 24);
+            this.button_analysis_prototxt.Name = "button_analysis_prototxt";
+            this.button_analysis_prototxt.Size = new System.Drawing.Size(75, 23);
+            this.button_analysis_prototxt.TabIndex = 7;
+            this.button_analysis_prototxt.Text = "设置";
+            this.button_analysis_prototxt.UseVisualStyleBackColor = true;
+            this.button_analysis_prototxt.Click += new System.EventHandler(this.button_analysis_prototxt_Click);
             // 
-            // label4
+            // label8
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(17, 94);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(89, 12);
-            this.label4.TabIndex = 6;
-            this.label4.Text = "模型配置config";
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(19, 63);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(113, 12);
-            this.label5.TabIndex = 9;
-            this.label5.Text = "模型权重caffemodel";
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(19, 28);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(101, 12);
+            this.label8.TabIndex = 7;
+            this.label8.Text = "模型文件prototxt";
             // 
             // label2
             // 
@@ -402,7 +402,7 @@
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox1);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "参数配置";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();

@@ -848,8 +848,12 @@ namespace SYY {
 		{
 			const std::string root = FileSystem::GetCurExePath() + "\\config\\";
 
-			std::string prototxt = root + "gc_fullimage_deploy.prototxt";
-			std::string caffemodel = root + "gc_fullimage_iter_5000.caffemodel";
+			//std::string prototxt = root + "gc_fullimage_deploy.prototxt";
+			//std::string caffemodel = root + "gc_fullimage_iter_5000.caffemodel";
+
+			std::string prototxt = root + Config::GetConfValue("grading_classify.prototxt");
+			std::string caffemodel = root + Config::GetConfValue("grading_classify.caffemodel");
+
 			bool is_gpu = false;
 
 			return ClassifierInitializer(m_pGradingClassifier, prototxt, caffemodel, is_gpu);
@@ -859,8 +863,12 @@ namespace SYY {
 		{
 			const std::string root = FileSystem::GetCurExePath() + "\\config\\";
 
-			std::string prototxt = root + "lession_classify_trainval.prototxt";
-			std::string caffemodel = root + "lession_classify_iter_50000.caffemodel";
+			//std::string prototxt = root + "lession_classify_trainval.prototxt";
+			//std::string caffemodel = root + "lession_classify_iter_50000.caffemodel";
+
+			std::string prototxt = root + Config::GetConfValue("lession_type.prototxt");
+			std::string caffemodel = root + Config::GetConfValue("lession_type.caffemodel");
+
 			bool is_gpu = false;
 
 			return ClassifierInitializer(m_pLessionClassifier, prototxt, caffemodel, is_gpu);

@@ -124,8 +124,6 @@ namespace MedicalAnalysis {
 		DetectAccurate = 0x20,
 	};
 
-
-
 	MEDICAL_ANALYSIS_SDK_API ErrorCode InitBUAnalysisWithMode(
 		OUT HANDLE& hHandle,
 		IN unsigned long nMode

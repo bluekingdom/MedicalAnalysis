@@ -61,7 +61,7 @@ namespace Config {
 		std::string config_file = FileSystem::GetCurExePath() + "\\config\\sdk.cfg";
 		if (false == FileSystem::IsExists(config_file))
 		{
-			return " ";
+			return "!";
 		}
 
 		using boost::property_tree::ptree;
