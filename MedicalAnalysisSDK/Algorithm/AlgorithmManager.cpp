@@ -175,6 +175,7 @@ namespace SYY {
 		//cv::imshow("srcImg", srcImg);
 		//cv::waitKey();
 
+
 		for (int i = 0; i < pResult->nLessionsCount; i++)
 		{
 			auto rect = Common::Rect2CVRect(pResult->pLessionRects[i]);
