@@ -70,7 +70,7 @@ namespace MedicalAnalysis {
 		AnalysisMethod m_nAnalysisMethod;
 
 		static const int s_nNumBlasThread = 8;
-		static const bool s_bIsUseGPU = false;
+		static const bool s_bIsUseGPU = true;
 	};
 
 }

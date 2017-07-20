@@ -172,8 +172,8 @@ namespace SYY {
 		cv::Mat srcImg = cv::Mat(pImage->nHeight, pImage->nWidth, 
 			pImage->nChannels == 3 ? CV_8UC3 : CV_8UC1, pImage->pData);		
 
-		//cv::imshow("srcImg", srcImg);
-		//cv::waitKey();
+		auto crop_rect = Common::Rect2CVRect(pResult->rCropRect);
+		cv::rectangle(srcImg, crop_rect, cv::Scalar(255, 255, 255));
 
 		for (int i = 0; i < pResult->nLessionsCount; i++)
 		{

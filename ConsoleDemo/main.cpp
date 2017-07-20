@@ -9,12 +9,12 @@ using namespace SYY;
 using namespace SYY::MedicalAnalysis;
 using namespace SYY::Inpainting;
 
-void test_BUAnalysis() 
+void test_BUAnalysis()
 {
 	ErrorCode res;
 
 	HANDLE handle;
-	res = InitBUAnalysisWithMode(handle, BUAnalysisMode::Crop_V1 | BUAnalysisMode::DetectMore);
+	res = InitBUAnalysisWithMode(handle, BUAnalysisMode::Crop_V2 | BUAnalysisMode::DetectAccurate);
 	if (res != SYY_NO_ERROR)
 		return;
 
@@ -38,19 +38,25 @@ void test_BUAnalysis()
 
 	BUAnalysisResult result;
 	//res = ExecuteBUAnalysis(handle, (char* )img.data, img.cols, img.rows, &result);
-	res = ExecuteBUAnalysisFromFile(handle, &image, &result);
-	if (res != SYY_NO_ERROR)
-		return;
+	for (int i = 0; i < 1000; i++)
+	{
+		double t = (double)cv::getTickCount();
+		res = ExecuteBUAnalysisFromFile(handle, &image, &result);
+		std::cout << (cv::getTickCount() - t) / (double)cv::getTickFrequency() << std::endl;
 
-	res = DrawResult2Image(&image, &result);
-	if (res != SYY_NO_ERROR)
-		return;
+		if (res != SYY_NO_ERROR)
+			return;
 
-	cv::Mat srcImg = cv::Mat(image.nHeight, image.nWidth,
-		image.nChannels == 3 ? CV_8UC3 : CV_8UC1, image.pData);
+		res = DrawResult2Image(&image, &result);
+		if (res != SYY_NO_ERROR)
+			return;
 
-	cv::imshow("srcImg", srcImg);
-	cv::waitKey();
+		cv::Mat srcImg = cv::Mat(image.nHeight, image.nWidth,
+			image.nChannels == 3 ? CV_8UC3 : CV_8UC1, image.pData);
+
+		cv::imshow("srcImg", srcImg);
+		cv::waitKey(1);
+	}
 
 	cv::Rect cropRect( result.rCropRect.x, result.rCropRect.y, result.rCropRect.w, result.rCropRect.h );
 	cv::rectangle(img, cropRect, cv::Scalar(255, 255, 255), 2);
