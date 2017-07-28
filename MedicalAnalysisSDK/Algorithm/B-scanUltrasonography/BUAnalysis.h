@@ -47,7 +47,7 @@ namespace MedicalAnalysis {
 		bool AnalysisFRCNN(const cv::Mat& srcImg, std::vector<DeepLearning::Detect_Result>& dets);
 		void ReleaseFRCNN();
 
-		bool InitSSDMore();
+		bool InitSSDFast();
 		bool InitSSDAccurate();
 		bool AnalysisSSD(const cv::Mat& srcImg, const cv::Rect& validRect, std::vector<DeepLearning::Detect_Result>& dets);
 		void ReleaseSSD();

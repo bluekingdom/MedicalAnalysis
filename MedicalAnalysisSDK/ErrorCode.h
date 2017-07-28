@@ -27,6 +27,10 @@ namespace SYY {
 		SYY_SYS_ERROR = 10,					// 系统错误
 		SYY_LOG_INIT_NO_PERMISSION = 11,	// 日志初始化失败，程序无权限
 		SYY_NO_IMPLEMENTION = 11,			// 算法未实现
+
+		// Video
+		SYY_VIDEO_END_FRAME = 20,			// 视频加载到最后一帧
+		SYY_VIDEO_FORMAT_DISMATCH = 21,		// 视频帧格式不对
 	};
 }
 

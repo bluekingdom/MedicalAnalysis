@@ -86,11 +86,11 @@ BOOL CMFCDemoDlg::OnInitDialog()
 		MessageBox(msg);
 	}
 	else {
-		if (SYY_NO_ERROR != (code = InitBUAnalysisWithMode(m_hHandleBUAnalysis, BUAnalysisMode::Crop_V1 | BUAnalysisMode::DetectMore))) {
+		if (SYY_NO_ERROR != (code = InitBUAnalysisWithMode(m_hHandleBUAnalysis, BUAnalysisMode::Crop_V1 | BUAnalysisMode::DetectFast))) {
 			sprintf_s(msg, "初始化B超分析算法1失败! 错误码为%d", code);
 			MessageBox(msg);
 		}
-		if (SYY_NO_ERROR != (code = InitBUAnalysisWithMode(m_hHandleBUAnalysis2, BUAnalysisMode::Crop_V2 | BUAnalysisMode::DetectMore))) {
+		if (SYY_NO_ERROR != (code = InitBUAnalysisWithMode(m_hHandleBUAnalysis2, BUAnalysisMode::Crop_V2 | BUAnalysisMode::DetectFast))) {
 			sprintf_s(msg, "初始化B超分析算法2失败! 错误码为%d", code);
 			MessageBox(msg);
 		}

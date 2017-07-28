@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include "MedicalAnalysisSDK.h"
 #include <opencv2/core.hpp>
 
@@ -20,6 +21,7 @@ namespace SYY {
 
 	namespace Config {
 		std::string GetConfValue(const std::string& key);
+		std::vector<int> GetConfigValueVectorInt(const std::string& key);
 	}
 
 }

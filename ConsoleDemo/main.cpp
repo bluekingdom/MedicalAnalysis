@@ -8,13 +8,14 @@
 using namespace SYY;
 using namespace SYY::MedicalAnalysis;
 using namespace SYY::Inpainting;
+using namespace SYY::VideoUtils;
 
 void test_BUAnalysis()
 {
 	ErrorCode res;
 
 	HANDLE handle;
-	res = InitBUAnalysisWithMode(handle, BUAnalysisMode::Crop_V2 | BUAnalysisMode::DetectAccurate);
+	res = InitBUAnalysisWithMode(handle, BUAnalysisMode::Crop_V1 | BUAnalysisMode::DetectFast);
 	if (res != SYY_NO_ERROR)
 		return;
 
@@ -41,7 +42,7 @@ void test_BUAnalysis()
 	for (int i = 0; i < 1000; i++)
 	{
 		double t = (double)cv::getTickCount();
-		res = ExecuteBUAnalysisFromFile(handle, &image, &result);
+		res = ExecuteBUAnalysisFromImage(handle, &image, &result);
 		std::cout << (cv::getTickCount() - t) / (double)cv::getTickFrequency() << std::endl;
 
 		if (res != SYY_NO_ERROR)
@@ -119,6 +120,55 @@ void test_inpaint() {
 	cv::waitKey();
 }
 
+void test_video() {
+	ErrorCode res;
+
+	HANDLE handle, analysisHandle;
+	const std::string video_file = "E:\\Download\\video_fast.avi";
+	res = LoadVideo(handle, video_file.c_str(), video_file.size());
+	if (res != SYY_NO_ERROR)
+	{
+		return;
+	}
+
+	Image image;
+	res = InitBUAnalysisWithMode(analysisHandle, BUAnalysisMode::Crop_V1 | BUAnalysisMode::DetectFast);
+	if (res != SYY_NO_ERROR)
+		return;
+
+	BUAnalysisResult result;
+	while (true)
+	{
+		res = GetVideoFrame(handle, &image);
+		if (res == SYY_SYS_ERROR)
+		{
+			return;
+		}
+		if (res == SYY_VIDEO_END_FRAME)
+		{
+			std::cout << "video end!" << std::endl;
+			return;
+		}
+
+		//cv::Mat frame = cv::Mat(image.nHeight, image.nWidth, (image.nChannels == 3 ? CV_8UC3 : CV_8UC1), image.pData);
+
+		res = ExecuteBUAnalysisFromImage(analysisHandle, &image, &result);
+
+		if (res != SYY_NO_ERROR)
+			return;
+
+		res = DrawResult2Image(&image, &result);
+		if (res != SYY_NO_ERROR)
+			return;
+
+		cv::Mat frame = cv::Mat(image.nHeight, image.nWidth,
+			image.nChannels == 3 ? CV_8UC3 : CV_8UC1, image.pData);
+
+		cv::imshow("frame", frame);
+		cv::waitKey(33);
+	}
+}
+
 void main() 
 {
 	ErrorCode res;
@@ -127,8 +177,9 @@ void main()
 	if (res != SYY_NO_ERROR)
 		return;
 
-	test_BUAnalysis();
+	//test_BUAnalysis();
 	//test_inpaint();
+	test_video();
 
 	ReleaseSDK();
 }

@@ -82,7 +82,7 @@ namespace SYY {
 		{
 			CHECK_ALGO_INIT();
 			//return sg_pAlgorithmManager->InitBUAnalysis(hHandle, DetectAccurate | Crop_V2);
-			return sg_pAlgorithmManager->InitBUAnalysis(hHandle, DetectMore | Crop_V1);
+			return sg_pAlgorithmManager->InitBUAnalysis(hHandle, DetectFast | Crop_V1);
 		}
 
 		MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseBUAnalysis(INOUT HANDLE& hHandle)
@@ -99,12 +99,12 @@ namespace SYY {
 			return sg_pAlgorithmManager->ExecuteBUAnalysis(hHandle, pImg, nImgWidth, nImgHeight, pResult);
 		}
 
-		MEDICAL_ANALYSIS_SDK_API ErrorCode ExecuteBUAnalysisFromFile(IN HANDLE hHandle, 
+		MEDICAL_ANALYSIS_SDK_API ErrorCode ExecuteBUAnalysisFromImage(IN HANDLE hHandle, 
 			IN Image* pImage,
 			OUT BUAnalysisResult* pResult)
 		{
 			CHECK_ALGO_INIT();
-			return sg_pAlgorithmManager->ExecuteBUAnalysisFromFile(hHandle, pImage, pResult);
+			return sg_pAlgorithmManager->ExecuteBUAnalysisFromImage(hHandle, pImage, pResult);
 		}
 
 		MEDICAL_ANALYSIS_SDK_API ErrorCode DrawResult2Image(
@@ -135,6 +135,28 @@ namespace SYY {
 		{
 			CHECK_ALGO_INIT();
 			return sg_pAlgorithmManager->ExecuteInpaint(hHandle, srcImg, maskImg, inpaintImg);
+		}
+
+	}
+
+	namespace VideoUtils {
+
+		MEDICAL_ANALYSIS_SDK_API ErrorCode LoadVideo(IN const char* pVideoFile, IN const int nVideoFileStrLength, OUT HANDLE& hHandle, OUT Image* pFrameDesc)
+		{
+			CHECK_ALGO_INIT();
+			return sg_pAlgorithmManager->LoadVideo(pVideoFile, nVideoFileStrLength, hHandle, pFrameDesc);
+		}
+
+		MEDICAL_ANALYSIS_SDK_API ErrorCode GetVideoFrame(IN HANDLE hHandle, OUT Image* pImage)
+		{
+			CHECK_ALGO_INIT();
+			return sg_pAlgorithmManager->GetVideoFrame(hHandle, pImage);
+		}
+
+		MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseVideo(INOUT HANDLE& hHandle)
+		{
+			CHECK_ALGO_INIT();
+			return sg_pAlgorithmManager->ReleaseVideo(hHandle);
 		}
 
 	}

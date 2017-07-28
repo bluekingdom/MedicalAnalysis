@@ -71,6 +71,22 @@ namespace Config {
 		return pt.get<std::string>("config." + key);
 	}
 
+	std::vector<int> GetConfigValueVectorInt(const std::string& key)
+	{
+		std::string value = GetConfValue(key);
+		std::vector<int> res;
+		if (value == "!" || value == "")
+			return res;
+
+		int idx = value.find(',');
+		res.push_back(atoi(value.substr(0, idx).c_str()));
+		int idx2 = value.find(',', idx);
+		res.push_back(atoi(value.substr(idx+1, idx2).c_str()));
+		res.push_back(atoi(value.substr(idx2 + 1).c_str()));
+
+		return res;
+	}
+
 }
 
 }

@@ -19,16 +19,6 @@ namespace SYY {
 		{
 			GLOG("BUAnalysis::Analysis info: enter!\n");
 
-			//if (result.pLessionRects)
-			//{
-			//	delete[] result.pLessionRects;
-			//	delete[] result.pLessionConfidence;
-			//	delete[] result.pLessionTypes;
-
-			//	result.pLessionRects = nullptr;
-				result.nLessionsCount = 0;
-			//}
-
 			if (srcImg.empty())
 			{
 				GLOG("BUAnalysis::Analysis error: srcImg is empty!\n");
@@ -38,11 +28,19 @@ namespace SYY {
 			// get valid rect
 			cv::Rect validRect;
 
+			double t = (double)cv::getTickCount();
 			CropValidRegion(srcImg, validRect);
+			double t1 = (double)cv::getTickCount();
+
+			std::cout << "crop time: " << (t1 - t) / (double)cv::getTickFrequency() << std::endl;
+			GLOG("Info: crop time: %f\n", (t1 - t) / (double)cv::getTickFrequency());
 
 			result.rCropRect = Common::CVRect2Rect(validRect);
 
-			auto validImg = srcImg(validRect);
+			auto validImg = srcImg(validRect).clone();
+
+
+			double t2 = (double)cv::getTickCount();
 
 			// classify grade
 			std::vector<int> grades;
@@ -52,6 +50,9 @@ namespace SYY {
 				return SYY_SYS_ERROR;
 			}
 			result.nGrading = (LessionGrading)grades[0];
+
+			double t3 = (double)cv::getTickCount();
+			GLOG("Info: grading classify time: %f\n", (t3 - t2) / (double)cv::getTickFrequency());
 
 			// detect lession
 			std::vector<DeepLearning::Detect_Result> detections;
@@ -74,6 +75,9 @@ namespace SYY {
 				GLOG("Error: Unknown Analysis Method!\n");
 				return SYY_SYS_ERROR;
 			}
+
+			double t4 = (double)cv::getTickCount();
+			GLOG("Info: lession detect time: %f\n", (t4 - t3) / (double)cv::getTickFrequency());
 
 			float threshold = 0.10f;
 
@@ -104,6 +108,9 @@ namespace SYY {
 
 			result.nLessionsCount = std::min((int)rects.size(), BUAnalysisResult::MAX_LEN);
 
+			double t5 = (double)cv::getTickCount();
+			GLOG("Info: result process time: %f\n", (t5 - t4) / (double)cv::getTickFrequency());
+
 			if (result.nLessionsCount > 0)
 			{
 				// lession type classify
@@ -130,6 +137,10 @@ namespace SYY {
 				}
 			}
 
+			double t6 = (double)cv::getTickCount();
+			GLOG("Info: lession classify time: %f\n", (t6 - t5) / (double)cv::getTickFrequency());
+
+			GLOG("Info: analysis total time: %f\n", (t6 - t) / (double)cv::getTickFrequency());
 			//auto drawing = srcImg.clone();
 			//cv::rectangle(drawing, validRect, cv::Scalar(255, 255, 255));
 			//cv::imshow("drawing", drawing);
@@ -156,13 +167,11 @@ namespace SYY {
 			if (!m_pValidRegionDetector)
 				m_pValidRegionDetector = new DeepLearning;
 
-			const int gpu_idx = -1;
-
 			bool res = false;
 
-			if (nMode & BUAnalysisMode::DetectMore)
+			if (nMode & BUAnalysisMode::DetectFast)
 			{
-				res = InitSSDMore();
+				res = InitSSDFast();
 			}
 			else if (nMode & BUAnalysisMode::DetectAccurate)
 			{
@@ -446,24 +455,37 @@ namespace SYY {
 			if (m_nCropVersion == 0)
 				return false;
 
+			cv::Mat src;
+			float scale_radio = 800.0f / srcImg.cols;
+
+			cv::resize(srcImg, src, cv::Size(800, (int)(scale_radio * srcImg.rows)));
+
 			bool res = false;
 			switch (m_nCropVersion)
 			{
 			case 1:
-				res = CropValidRegion_V1(srcImg, validRegion);
+				res = CropValidRegion_V1(src, validRegion);
 				break;
 			case 2:
-				res = CropValidRegion_V2(srcImg, validRegion);
+				res = CropValidRegion_V2(src, validRegion);
 				break;
 			case 3:
-				res = CropValidRegion_V3(srcImg, validRegion);
+				res = CropValidRegion_V3(src, validRegion);
 				break;
 			}
 
 			if (res == false)
 			{
+				validRegion.x = 0;
+				validRegion.y = 0;
 				validRegion.width = srcImg.cols;
 				validRegion.height = srcImg.rows;
+			}
+			else {
+				validRegion.x /= scale_radio;
+				validRegion.y /= scale_radio;
+				validRegion.width /= scale_radio;
+				validRegion.height /= scale_radio;
 			}
 
 			return true;
@@ -577,21 +599,21 @@ namespace SYY {
 			m_pBUDetector = nullptr;
 		}
 
-		bool BUAnalysis::InitSSDMore()
+		bool BUAnalysis::InitSSDFast()
 		{
 			const std::string root = FileSystem::GetCurExePath() + "\\config\\";
 			//std::string prototxt = root + "ssd_deploy_vgg_300.prototxt";
 			//std::string caffemodel = root + "b-scan_iter_1000.caffemodel";
 
 			//std::string prototxt = root + "ssd_deploy_vgg_300.prototxt";
-			std::string prototxt = root + Config::GetConfValue("analysis_more.prototxt");
+			std::string prototxt = root + Config::GetConfValue("analysis_fast.prototxt");
 
 			//std::string caffemodel = root + "20170629-b-scan_iter_30000.caffemodel";
 			//std::string caffemodel = root + "20170627-b-scan-lession_iter_30000.caffemodel";
-			std::string caffemodel = root + Config::GetConfValue("analysis_more.caffemodel");
+			std::string caffemodel = root + Config::GetConfValue("analysis_fast.caffemodel");
 			//std::string caffemodel = root + "20170621-b-scan_iter_59000.caffemodel";
 
-			bool is_gpu= s_bIsUseGPU;
+			bool is_gpu = s_bIsUseGPU;
 
 			if (false == CheckFile(prototxt) || false == CheckFile(caffemodel)) 
 			{

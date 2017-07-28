@@ -105,6 +105,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>MEDICAL_ANALYSIS_SDK_EXPORTS;WIN64;_DEBUG;_WINDOWS;_USRDLL;MEDICALANALYSISSDK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)\MedicalAnalysisSDK\Algorithm\Inpaint;$(SolutionDir)\MedicalAnalysisSDK;$(SolutionDir)\3rdparty\opencv_3_1_0\include;$(SolutionDir)\3rdparty\boost_1_64_0;$(SolutionDir)\3rdparty\deeplearning</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -140,6 +141,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>MEDICAL_ANALYSIS_SDK_EXPORTS;WIN64;NDEBUG;_WINDOWS;_USRDLL;MEDICALANALYSISSDK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)\MedicalAnalysisSDK\Algorithm\Inpaint;$(SolutionDir)\MedicalAnalysisSDK;$(SolutionDir)\3rdparty\opencv_3_1_0\include;$(SolutionDir)\3rdparty\boost_1_64_0;$(SolutionDir)\3rdparty\deeplearning</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

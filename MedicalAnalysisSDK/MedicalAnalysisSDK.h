@@ -120,7 +120,7 @@ namespace MedicalAnalysis {
 		Crop_V1 = 0x2,
 		Crop_V2 = 0x4,
 		Crop_V3 = 0x8,
-		DetectMore = 0x10,
+		DetectFast = 0x10,
 		DetectAccurate = 0x20,
 	};
 
@@ -145,7 +145,7 @@ namespace MedicalAnalysis {
 		OUT BUAnalysisResult* pResult
 		);
 
-	MEDICAL_ANALYSIS_SDK_API ErrorCode ExecuteBUAnalysisFromFile(
+	MEDICAL_ANALYSIS_SDK_API ErrorCode ExecuteBUAnalysisFromImage(
 		IN HANDLE hHandle, 
 		IN Image* pImage, 
 		OUT BUAnalysisResult* pResult
@@ -157,4 +157,23 @@ namespace MedicalAnalysis {
 		);
 
 }
+
+namespace VideoUtils {
+	MEDICAL_ANALYSIS_SDK_API ErrorCode LoadVideo(
+		IN const char* pVideoFile,
+		IN const int nVideoFileStrLength,
+		OUT HANDLE& hHandle,
+		OUT Image* pFrameDesc
+		);
+
+	MEDICAL_ANALYSIS_SDK_API ErrorCode GetVideoFrame(
+		IN HANDLE hHandle,
+		OUT Image* pImage
+		);
+
+	MEDICAL_ANALYSIS_SDK_API ErrorCode ReleaseVideo(
+		INOUT HANDLE& hHandle
+		);
+}
+
 }

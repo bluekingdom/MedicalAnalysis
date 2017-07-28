@@ -71,10 +71,14 @@ namespace SYY
 		SYY_SYS_ERROR = 10,					// 系统错误
 		SYY_LOG_INIT_NO_PERMISSION = 11,	// 日志初始化失败，程序无权限
 		SYY_NO_IMPLEMENTION = 11,			// 算法未实现
+
+        // Video
+		SYY_VIDEO_END_FRAME = 20,			// 视频加载到最后一帧
 	};
 
     public class SDK
     {
+
 #if DEBUG
         const string Dll_Name = "MedicalAnalysisSDK_x64_d.dll";
 #else
@@ -98,7 +102,7 @@ namespace SYY
             );
 
         [DllImport(Dll_Name, CharSet = CharSet.Auto, CallingConvention = CallingConvention.Cdecl)]
-        public extern static ErrorCode ExecuteBUAnalysisFromFile(
+        public extern static ErrorCode ExecuteBUAnalysisFromImage(
             ulong hHandle, 
             CImage cImage,
             ref BUAnalysisResult pResult
@@ -110,8 +114,44 @@ namespace SYY
             BUAnalysisResult pResult
             );
 
+        [DllImport(Dll_Name, CharSet = CharSet.Auto, CallingConvention = CallingConvention.Cdecl)]
+        public extern static ErrorCode LoadVideo(
+            IntPtr pVideoFile,
+            int nVideoFileStrLength,
+            ref ulong hHandle,
+            ref CImage cImage
+            );
+
+        [DllImport(Dll_Name, CharSet = CharSet.Auto, CallingConvention = CallingConvention.Cdecl)]
+        public extern static ErrorCode GetVideoFrame(
+            ulong hHandle,
+            ref CImage cImage 
+            );
+
+        [DllImport(Dll_Name, CharSet = CharSet.Auto, CallingConvention = CallingConvention.Cdecl)]
+        public extern static ErrorCode ReleaseVideo(
+            ref ulong hHandle
+            );
+
         public static bool CvtBitmap2CImage(Bitmap bitmap, ref CImage image)
         {
+            switch(bitmap.PixelFormat)
+            {
+                case PixelFormat.Format24bppRgb:
+                    image.nChannels = 3;
+                    break;
+                case PixelFormat.Format32bppRgb:
+                    image.nChannels = 4;
+                    break;
+                case PixelFormat.Format8bppIndexed:
+                    image.nChannels = 1;
+                    break;
+                default:
+                    return false;
+            }
+            image.nWidth = bitmap.Width;
+            image.nHeight = bitmap.Height;
+
             if (bitmap.Width % 4 != 0)
             {
                 int w = bitmap.Width - bitmap.Width % 4;
@@ -124,10 +164,6 @@ namespace SYY
             image.pData = bmpData.Scan0;
 
             bitmap.UnlockBits(bmpData);
-
-            image.nWidth = bitmap.Width;
-            image.nHeight = bitmap.Height;
-            image.nChannels = bitmap.PixelFormat == PixelFormat.Format24bppRgb ? 3 : 1;
 
             return true;
         }

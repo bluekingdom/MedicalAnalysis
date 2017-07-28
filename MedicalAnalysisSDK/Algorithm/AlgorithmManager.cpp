@@ -76,7 +76,7 @@ namespace SYY {
 		return pBUAnalysis->Analysis(cv::Mat(nImgHeight, nImgWidth, CV_8UC3, pImg), *pResult);
 	}
 
-	SYY::ErrorCode AlgorithmManager::ExecuteBUAnalysisFromFile(HANDLE hHandle, 
+	SYY::ErrorCode AlgorithmManager::ExecuteBUAnalysisFromImage(HANDLE hHandle, 
 		Image* pImage, MedicalAnalysis::BUAnalysisResult* pResult)
 	{
 		BUAnalysis* pBUAnalysis = reinterpret_cast<BUAnalysis*>(hHandle);
@@ -88,6 +88,8 @@ namespace SYY {
 
 		cv::Mat srcImg = cv::Mat(pImage->nHeight, pImage->nWidth, 
 			pImage->nChannels == 3 ? CV_8UC3 : CV_8UC1, pImage->pData);
+
+		//GLOG("Info: srcImg.rows: %d, srcImg.cols: %d\n", srcImg.rows, srcImg.cols);
 
 		ErrorCode res = pBUAnalysis->Analysis(srcImg, *pResult);
 
@@ -173,13 +175,86 @@ namespace SYY {
 			pImage->nChannels == 3 ? CV_8UC3 : CV_8UC1, pImage->pData);		
 
 		auto crop_rect = Common::Rect2CVRect(pResult->rCropRect);
-		cv::rectangle(srcImg, crop_rect, cv::Scalar(255, 255, 255));
+		//cv::rectangle(srcImg, crop_rect, cv::Scalar(255, 255, 255));
+
+		std::vector<int> color = Config::GetConfigValueVectorInt("draw_result.lession_edge_color");
+
+		cv::Scalar cv_color(color[0], color[1], color[2]);
 
 		for (int i = 0; i < pResult->nLessionsCount; i++)
 		{
 			auto rect = Common::Rect2CVRect(pResult->pLessionRects[i]);
-			cv::rectangle(srcImg, rect, cv::Scalar(255, 255, 255));
+			cv::rectangle(srcImg, rect, color);
 		}
+
+		return SYY_NO_ERROR;
+	}
+
+	SYY::ErrorCode AlgorithmManager::LoadVideo(const char* pVideoFile, const int nVideoFileStrLength, HANDLE& hHandle, Image* pFrameDesc)
+	{
+		cv::VideoCapture *pCap = new cv::VideoCapture;
+		//char* file = new char[nVideoFileStrLength + 1];
+		//memcpy(file, pVideoFile, nVideoFileStrLength);
+		const char* file = pVideoFile;
+		if (!pCap || (false == pCap->open(file)))
+		{
+			GLOG("Error: pCap is null or Can not open video file: %s", file);
+			return SYY_SYS_ERROR;
+		}
+
+		cv::Mat frame;
+		pFrameDesc->nHeight = pCap->get(cv::CAP_PROP_FRAME_HEIGHT);
+		pFrameDesc->nWidth = pCap->get(cv::CAP_PROP_FRAME_WIDTH);
+		pFrameDesc->nChannels = 3;
+
+		hHandle = reinterpret_cast<HANDLE>(pCap);
+		return SYY_NO_ERROR;
+	}
+
+	SYY::ErrorCode AlgorithmManager::GetVideoFrame(HANDLE hHandle, Image* pImage)
+	{
+		auto pCap = reinterpret_cast<cv::VideoCapture*>(hHandle);
+		if (!pCap)
+		{
+			GLOG("Error: invalid handle!\n");
+			return SYY_SYS_ERROR;
+		}
+
+		cv::Mat frame;
+		if (pCap->grab())
+		{
+			pCap->retrieve(frame);
+			if (pImage->nChannels != frame.channels() || pImage->nWidth != frame.cols || pImage->nHeight != frame.rows)
+			{
+				GLOG("Error: Format dismatch. Video Frame: w %d, h %d, c%d; Input Image: w %d, h %d, c%d", 
+					frame.cols, frame.rows, frame.channels(), pImage->nWidth, pImage->nHeight, pImage->nChannels);
+				return SYY_VIDEO_FORMAT_DISMATCH;
+			}
+
+			int imgDataLen = frame.rows * frame.step[0];
+
+			memcpy(pImage->pData, frame.data, imgDataLen);
+		}
+		else 
+		{
+			return SYY_VIDEO_END_FRAME;
+		}
+
+		return SYY_NO_ERROR;
+	}
+
+	SYY::ErrorCode AlgorithmManager::ReleaseVideo(HANDLE& hHandle)
+	{
+		auto pCap = reinterpret_cast<cv::VideoCapture*>(hHandle);
+		if (!pCap)
+		{
+			GLOG("Error: invalid handle!\n");
+			return SYY_SYS_ERROR;
+		}
+
+		pCap->release();
+		delete pCap;
+		hHandle = 0;
 
 		return SYY_NO_ERROR;
 	}

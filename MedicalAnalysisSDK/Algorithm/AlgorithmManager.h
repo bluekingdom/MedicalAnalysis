@@ -32,7 +32,8 @@ namespace SYY {
 			char* pImg, int nImgWidth, int nImgHeight,
 			MedicalAnalysis::BUAnalysisResult* pResult);
 
-		ErrorCode ExecuteBUAnalysisFromFile(HANDLE hHandle,
+		ErrorCode ExecuteBUAnalysisFromImage(
+			HANDLE hHandle,
 			Image* pImage,
 			MedicalAnalysis::BUAnalysisResult* pResult);
 
@@ -44,8 +45,21 @@ namespace SYY {
 			Image& inpaintImg);
 
 		ErrorCode DrawResult2Image(
-			INOUT Image* pImage,
-			IN MedicalAnalysis::BUAnalysisResult* pResult);	
+			Image* pImage,
+			MedicalAnalysis::BUAnalysisResult* pResult);	
+
+		ErrorCode LoadVideo(
+			const char* pVideoFile,
+			const int nVideoFileStrLength,
+			HANDLE& hHandle,
+			Image* pFrameDesc
+			);
+
+		ErrorCode GetVideoFrame(
+			HANDLE hHandle,
+			Image* pImage );
+
+		ErrorCode ReleaseVideo( HANDLE& hHandle );
 
 	private:
 
