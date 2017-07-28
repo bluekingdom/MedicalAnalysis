@@ -181,6 +181,7 @@ namespace SYY {
 
 		cv::Scalar cv_color(color[0], color[1], color[2]);
 
+
 		for (int i = 0; i < pResult->nLessionsCount; i++)
 		{
 			auto rect = Common::Rect2CVRect(pResult->pLessionRects[i]);
