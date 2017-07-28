@@ -80,7 +80,7 @@ namespace Config {
 
 		int idx = value.find(',');
 		res.push_back(atoi(value.substr(0, idx).c_str()));
-		int idx2 = value.find(',', idx);
+		int idx2 = value.find(',', idx+1);
 		res.push_back(atoi(value.substr(idx+1, idx2).c_str()));
 		res.push_back(atoi(value.substr(idx2 + 1).c_str()));
 

@@ -174,18 +174,25 @@ namespace SYY {
 		cv::Mat srcImg = cv::Mat(pImage->nHeight, pImage->nWidth, 
 			pImage->nChannels == 3 ? CV_8UC3 : CV_8UC1, pImage->pData);		
 
-		auto crop_rect = Common::Rect2CVRect(pResult->rCropRect);
+		auto cropRect = Common::Rect2CVRect(pResult->rCropRect);
 		//cv::rectangle(srcImg, crop_rect, cv::Scalar(255, 255, 255));
 
 		std::vector<int> color = Config::GetConfigValueVectorInt("draw_result.lession_edge_color");
 
 		cv::Scalar cv_color(color[0], color[1], color[2]);
 
-
+		const float radio = 0.0f;
 		for (int i = 0; i < pResult->nLessionsCount; i++)
 		{
-			auto rect = Common::Rect2CVRect(pResult->pLessionRects[i]);
-			cv::rectangle(srcImg, rect, color);
+			auto r = Common::Rect2CVRect(pResult->pLessionRects[i]);
+			r.x = std::max(cropRect.x, int(r.x - radio * r.width));
+			r.y = std::max(cropRect.y, int(r.y - radio * r.height));
+			r.width = std::min(int(r.width + 2 * radio * r.width), cropRect.br().x - r.x);
+			r.height = std::min(int(r.height + 2 * radio * r.height), cropRect.br().y - r.y);
+
+			auto c = (r.tl() + r.br()) / 2;
+			cv::ellipse(srcImg, c, r.size() / 2, 0, 0, 360, cv_color);
+			//cv::rectangle(srcImg, rect, cv_color);
 		}
 
 		return SYY_NO_ERROR;
